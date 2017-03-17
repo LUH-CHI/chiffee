@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
+from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 
 from pprint import pprint
@@ -25,7 +26,21 @@ def showhistory(request):
 		context['buys'] = Buy.objects.filter(buy_user=request.user)
 	except Buy.DoesNotExist:
 		pass
-	if request.user.is_superuser:
+	if "POST" == request.method and "neu1" in request._post.keys():
+		user = authenticate(username=request.user.username, password=request._post["old"])
+		if user is not None:
+			# A backend authenticated the cred
+			if request._post["neu1"] == request._post["neu2"]:
+				user.set_password(request._post["neu1"])
+				user.save()
+				context["error"] = "Passwort geändert"
+			else:
+				context["error"] = "Die neuen Passwörter stimmen nicht überein!"
+		else:
+			# No backend authenticated the credentials
+			context['error'] = "Passwort nicht korrekt!"
+
+	if request.user.is_superuser and "POST" == request.method and "nutzer" in request._post.keys():
 		try:
 			profiteer = User.objects.get(username=request._post["nutzer"])
 			money = float(request._post["value"])
