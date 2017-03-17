@@ -9,8 +9,8 @@ urlpatterns = [
     url(r'^home/$', views.showhistory, name='home'),
 
     url(r'^$', views.products, name='index'),
-    url(r'^user/(?P<productID>[a-z,A-Z,\s]+)/$', views.users, name='users'),
-    url(r'^confirm/(?P<productID>[a-z,A-Z,\s]+)/(?P<userID>[a-z,A-Z,\s]+)/$', views.confirm, name='confirm'),
-    url(r'^confirmed/(?P<productID>[a-z,A-Z,\s]+)/(?P<userID>[a-z,A-Z,\s]+)/(?P<count>[0-9]+)$', views.confirmed, name='confirmed'),
+    url(r'^(?P<productID>[a-z,A-Z,\s]+)/$', views.users, name='users'),
+    url(r'^(?P<productID>[a-z,A-Z,\s]+)/(?P<userID>[a-z,A-Z,\s]+)/$', views.confirm, name='confirm'),
+    url(r'^(?P<productID>[a-z,A-Z,\s]+)/(?P<userID>[a-z,A-Z,\s]+)/(?P<count>[0-9]+)$', views.confirmed, name='confirmed'),
     
 ]

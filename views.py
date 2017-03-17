@@ -28,7 +28,7 @@ def showhistory(request):
 		u2.save()
 	context['balance'] = u2.balance
 	try:
-		context['buys'] = Buy.objects.get(buy_user=request.user)
+		context['buys'] = Buy.objects.filter(buy_user=request.user)
 	except Buy.DoesNotExist:
 		context['error'] = "Du hast bis jetzt noch nichts gekauft."
 	return render(request, 'chiffee/history.html', context)
@@ -59,7 +59,7 @@ def confirmed(request,productID, userID,count):
 	product = get_object_or_404(Product, product_name=productID)
 	user = get_object_or_404(User, username=userID)
 	context = {}
-	b = Buy(buy_count = count, buy_product = product, buy_user = user, buy_address=request.environ['REMOTE_ADDR'])
+	b = Buy(buy_count = count, buy_product = product, buy_user = user, buy_address=request.environ['REMOTE_ADDR'], buy_total=(product.product_price * int(count)))
 	b.save()
 	try:
 		u2 = user.employee
