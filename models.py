@@ -16,7 +16,7 @@ class Product(models.Model):
 	product_active = models.BooleanField(default=True)
 
 	def __str__(self):              # __unicode__ on Python 2
-		return (str(self.product_name) + " (" + str(self.product_categorie) + ")")
+		return (str(self.product_name) + " (" + str(self.product_price) + ")")
 
 class Buy(models.Model):
 	buy_date = models.DateTimeField(auto_now_add=True)
@@ -34,8 +34,14 @@ class Deposit(models.Model):
 	deposit_value = models.FloatField(default=0.0)
 	deposit_user = models.ForeignKey(User, default=None)
 
+	def __str__(self):              # __unicode__ on Python 2
+		return (str(self.deposit_user) + " (" + str(self.deposit_value) + ")")
+
 
 class Employee(models.Model):
 	user = models.OneToOneField(User)
 	balance = models.FloatField(default=0.0)
 	allMails = models.BooleanField(default=True)
+
+	def __str__(self):              # __unicode__ on Python 2
+		return (str(self.user) + " (" + str(self.balance) + ")")

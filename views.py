@@ -20,12 +20,6 @@ subject  = "Kauf Kaffeekasse"
 @login_required(login_url='chiffee:login')
 def showhistory(request):
 	context = {}
-	try:
-		u2 = request.user.employee
-	except Employee.DoesNotExist:
-		u2 = Employee(user=request.user)
-		u2.save()
-	context['balance'] = u2.balance
 	context['users'] = User.objects.all()
 	try:
 		context['buys'] = Buy.objects.filter(buy_user=request.user)
@@ -53,6 +47,12 @@ def showhistory(request):
 			email.send()
 		except:
 			context['error'] = "Irgendwas lief schief beim einzahlen"
+	try:
+		u2 = request.user.employee
+	except Employee.DoesNotExist:
+		u2 = Employee(user=request.user)
+		u2.save()
+	context['balance'] = u2.balance
 	return render(request, 'chiffee/history.html', context)
 
 def products(request):
@@ -65,7 +65,7 @@ def users(request,productID):
 	get_object_or_404(Product, product_name=productID)
 	context = {}
 	context['product'] = productID
-	context['users'] = User.objects.all()
+	context['users'] = User.objects.all().order_by('username')
 	return render(request, 'chiffee/user.html', context)
 
 def confirm(request,productID, userID):
