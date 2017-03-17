@@ -2,9 +2,31 @@
 
 
 {% block body %}
-		<p>Hallo {{ user }},</p>
+		<p>Hallo {{ user.first_name }} {{ user.last_name }},</p>
 		<p>Du hast ein Guthaben von: {{ balance|floatformat:2 }} Euro</p>
 		<a href="{% url 'chiffee:logout' %}" >Logout</a>
+
+{% if payment %}
+		<h2>Einzahlung erfolgreich!</h2>
+		<p>Ich habe {{ payment.deposit_value|floatformat:2 }} Euro für {{ payment.deposit_user.first_name }} {{ payment.deposit_user.last_name }} eingezahlt.</p>
+{% endif %}
+{% if error %}
+		<h2>{{ error }}</h2>
+{% endif %}
+{% if user.is_superuser %}
+		<p>Einzahlung:</p>
+		<form method="post" action="{% url 'chiffee:home' %}">
+			{% csrf_token %}
+		Zahle <input name="value" > Euro für
+			<select name="nutzer" >
+				<option value="---">----</option>{% for u in users %}
+				<option value="{{ u }}">{{ u.first_name }} {{ u.last_name }}</option>{% endfor %}
+			</select>
+		ein.
+		<input type="submit" name="submit" value="einzahlen">
+		</form>
+{% endif %}
+
 {% if buys %}
 		<p>Deine letzten K&auml;ufe waren:</p>
 		<table>
@@ -15,7 +37,7 @@
 				<th>Zeitpunkt</th>
 				<th>IP-Addresse</th>
 			</tr>
-{% for buy in buys %}
+	{% for buy in buys %}
 			<tr>
 				<td>{{ buy.buy_product }}</td>
 				<td>{{ buy.buy_count }}</td>
@@ -23,10 +45,11 @@
 				<td>{{ buy.buy_date }}</td>
 				<td>{{ buy.buy_address }}</td>
 			</tr>
-{% endfor %}
+	{% endfor %}
 		</table>
 {% else %}
-		<h2>{{ error }}</h2>
+		<h2>Du hast bis jetzt noch nichts gekauft.</h2>
 {% endif %}
+
 {% endblock %}
 

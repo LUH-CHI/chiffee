@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 
 from pprint import pprint
 
-from .models import Product, Buy, CATEGORIES, Employee
+from .models import Product, Buy, CATEGORIES, Employee, Deposit
 
 
 fromaddr = "kaffeekasse@chi.uni-hannover.de"
@@ -20,17 +20,39 @@ subject  = "Kauf Kaffeekasse"
 @login_required(login_url='chiffee:login')
 def showhistory(request):
 	context = {}
-	context['user'] = request.user.first_name + " " + request.user.last_name
 	try:
 		u2 = request.user.employee
 	except Employee.DoesNotExist:
 		u2 = Employee(user=request.user)
 		u2.save()
 	context['balance'] = u2.balance
+	context['users'] = User.objects.all()
 	try:
 		context['buys'] = Buy.objects.filter(buy_user=request.user)
 	except Buy.DoesNotExist:
-		context['error'] = "Du hast bis jetzt noch nichts gekauft."
+		pass
+	if request.user.is_superuser:
+		try:
+			profiteer = User.objects.get(username=request._post["nutzer"])
+			money = float(request._post["value"])
+			d = Deposit(deposit_user = profiteer, deposit_value = money)
+			d.save()
+			try:
+				u2 = profiteer.employee
+			except Employee.DoesNotExist:
+				u2 = Employee(user=profiteer)
+			u2.balance = u2.balance + money
+			u2.save()
+			context['payment'] = d
+			msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n" % (fromaddr,profiteer.email,"Gutschrift Kaffeekasse"))
+			msg = ("Hallo %s %s.\n\r\n\r" % (profiteer.first_name, profiteer.last_name))
+			msg = msg + ("Du hast soeben %0.2f Euro gut geschrieben bekommen.\n\r" % (money))
+			msg = msg + ("Aktueller Kontostand: %7.2f Euro.\n\r\n\r" % (u2.balance))
+			msg = msg + ("Es dankt,\n\rKarlo Kaffeekasse\n\r")
+			email = EmailMessage(subject, msg, fromaddr, [profiteer.email])
+			email.send()
+		except:
+			context['error'] = "Irgendwas lief schief beim einzahlen"
 	return render(request, 'chiffee/history.html', context)
 
 def products(request):

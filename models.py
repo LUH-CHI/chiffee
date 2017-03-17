@@ -29,6 +29,11 @@ class Buy(models.Model):
 	def __str__(self):              # __unicode__ on Python 2
 		return (str(self.buy_user) + " bought " + str(self.buy_count) + " "  + str(self.buy_product))
 		
+class Deposit(models.Model):
+	deposit_date = models.DateTimeField(auto_now_add=True)
+	deposit_value = models.FloatField(default=0.0)
+	deposit_user = models.ForeignKey(User, default=None)
+
 
 class Employee(models.Model):
 	user = models.OneToOneField(User)

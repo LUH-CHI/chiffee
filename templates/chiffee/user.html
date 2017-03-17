@@ -2,6 +2,6 @@
 
 
 {% block body %}{% for user in users %}
-			<a href="{% url 'chiffee:confirm' product user %}">{{ user.first_name }} {{ user.last_name }}</a>{% endfor %}
+			<a href="{% url 'chiffee:confirm' product user %}">{% if user.employee.balance < 0 %}!{% endif %}{{ user.first_name }} {{ user.last_name }}{% if user.employee.balance < 0 %}!{% endif %}</a>{% endfor %}
 {% endblock %}
 
