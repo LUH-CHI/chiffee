@@ -1,0 +1,30 @@
+{% extends "chiffee/base.html" %}
+
+
+{% block body %}
+		<p>Hallo {{ user }},</p>
+		<p>Du hast ein Guthaben von: {{ balance }}</p>
+		<a href="{% url 'chiffee:logout' %}" >Logout</a>
+{% if buys %}
+		<p>Deine letzten K&auml;ufe waren:</p>
+		<table>
+			<tr>
+				<th>Product</th>
+				<th>Anzahl</th>
+				<th>Zeitpunkt</th>
+				<th>IP-Addresse</th>
+			</tr>
+{% for buy in buys %}
+			<tr>
+				<td>{{ buy.buy_product }}</td>
+				<td>{{ buy.buy_count }}</td>
+				<td>{{ buy.buy_date }}</td>
+				<td>{{ buy.buy_address }}</td>
+			</tr>
+{% endfor %}
+		</table>
+{% else %}
+		<h2>{{ error }}</h2>
+{% endif %}
+{% endblock %}
+

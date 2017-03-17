@@ -1,0 +1,16 @@
+{% extends "chiffee/base.html" %}
+
+
+{% block body %}
+	Soll wirklich ein {{ product }} f&uuml;r {{ username }} gekauft werden? <br>
+	<a href="{% url 'chiffee:confirmed' product user 1%}" >Ja</a> <a href="{% url 'chiffee:index' %}">Nein</a> <br>
+	
+	Oder lieber gleich mehrere?<br>
+	<a href="{% url 'chiffee:confirmed' product user 2%}" >2</a>
+	<a href="{% url 'chiffee:confirmed' product user 3%}" >3</a>
+	<a href="{% url 'chiffee:confirmed' product user 4%}" >4</a>
+	<a href="{% url 'chiffee:confirmed' product user 5%}" >5</a>
+	<a href="{% url 'chiffee:confirmed' product user 10%}" >10</a>
+	
+{% endblock %}
+

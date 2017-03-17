@@ -1,0 +1,7 @@
+{% extends "chiffee/base.html" %}
+
+
+{% block body %}{% for user in users %}
+			<a href="{% url 'chiffee:confirm' product user %}">{{ user.first_name }} {{ user.last_name }}</a>{% endfor %}
+{% endblock %}
+
