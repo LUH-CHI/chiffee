@@ -43,15 +43,13 @@
 				<th>Anzahl</th>
 				<th>Kosten</th>
 				<th>Zeitpunkt</th>
-				<th>IP-Addresse</th>
 			</tr>
-	{% for buy in buys %}
+	{% for buy in buys reversed %}
 			<tr>
 				<td>{{ buy.buy_product }}</td>
 				<td>{{ buy.buy_count }}</td>
 				<td>{{ buy.buy_total|floatformat:2 }}</td>
 				<td>{{ buy.buy_date }}</td>
-				<td>{{ buy.buy_address }}</td>
 			</tr>
 	{% endfor %}
 		</table>
