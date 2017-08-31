@@ -33,24 +33,20 @@
 		</style>
 	{% block head %}{% endblock %}
 	<script>
-	function startTime() {
-	    var today = new Date();
-	    var h = today.getHours();
-	    var m = today.getMinutes();
-	    var s = today.getSeconds();
-	    m = checkTime(m);
-	    s = checkTime(s);
-	    document.getElementById('headline').innerHTML =
-	    "Chiffee - " + h + ":" + m + " Uhr";
-	    var t = setTimeout(startTime, 500);
-	}
-	function checkTime(i) {
-	    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
-	    return i;
+	function Time() {
+		var today = new Date();
+		var h = today.getHours();
+		var m = today.getMinutes();
+		if (m < 10) {
+			m = "0" + m;
+		}
+		document.getElementById('headline').innerHTML =
+		"Chiffee - " + h + ":" + m + " Uhr";
+		var t = setTimeout(Time, 5000);
 	}
 	</script>
 	</head>
-	<body onload="startTime()">
+	<body onload="Time()">
 		<h1 align="center" id="headline">Chiffee</h1>
 	{% block body %}{% endblock %}
 	</body>
