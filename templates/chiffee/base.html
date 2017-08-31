@@ -5,6 +5,8 @@
 		<style>
 		body{
 			font-size: 200%;
+			background-color: #555555;
+			color: white;
 		}
 		a:link, a:visited {
 			background-color: #5086de;
@@ -30,8 +32,25 @@
 		}
 		</style>
 	{% block head %}{% endblock %}
+	<script>
+	function startTime() {
+	    var today = new Date();
+	    var h = today.getHours();
+	    var m = today.getMinutes();
+	    var s = today.getSeconds();
+	    m = checkTime(m);
+	    s = checkTime(s);
+	    document.getElementById('headline').innerHTML =
+	    "Chiffee - " + h + ":" + m + " Uhr";
+	    var t = setTimeout(startTime, 500);
+	}
+	function checkTime(i) {
+	    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+	    return i;
+	}
+	</script>
 	</head>
-	<body>
+	<body onload="startTime()">
 		<h1 align="center" id="headline">Chiffee</h1>
 	{% block body %}{% endblock %}
 	</body>
