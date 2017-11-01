@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 
 from pprint import pprint
 
@@ -80,7 +81,9 @@ def users(request,productID):
 	get_object_or_404(Product, product_name=productID)
 	context = {}
 	context['product'] = productID
-	context['users'] = User.objects.all().order_by('username')
+	context['profs'] = Group.objects.get(name="prof").user_set.all().order_by('username')
+	context['wimi'] = Group.objects.get(name="wimi").user_set.all().order_by('username')
+	context['stud'] = Group.objects.get(name="stud").user_set.all().order_by('username')
 	return render(request, 'chiffee/user.html', context)
 
 def confirm(request,productID, userID):
