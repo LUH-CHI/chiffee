@@ -1,51 +1,21 @@
-{% extends "chiffee/base.html" %}
+{% extends "chiffee/home.html" %}
 
 
-{% block body %}
+{% block logedinbody %}
 {% if error %}
 		<h2 align="center" >{{ error }}</h2>
-{% endif %}
-
-		<p>Hallo {{ user.first_name }} {{ user.last_name }},</p>
-		<p>Du hast ein Guthaben von: {{ balance|floatformat:2 }} Euro</p>
-		<a href="{% url 'chiffee:logout' %}" >Logout</a>
-
-		<form method="post" action="{% url 'chiffee:home' %}">
-			{% csrf_token %}
-		Altes Passwort: <input type="password" name="old" required><br>
-		Neues Passwort: <input type="password" name="neu1" required><br>
-		Wiederholung: <input type="password" name="neu2" required><br>
-		<input type="submit" name="submit" value="&auml;ndern">
-		</form>
-{% if payment %}
-		<h2>Einzahlung erfolgreich!</h2>
-		<p>Ich habe {{ payment.deposit_value|floatformat:2 }} Euro für {{ payment.deposit_user.first_name }} {{ payment.deposit_user.last_name }} eingezahlt.</p>
-{% endif %}
-{% if user.is_superuser %}
-		<p>Einzahlung:</p>
-		<form method="post" action="{% url 'chiffee:home' %}">
-			{% csrf_token %}
-		Zahle <input name="value" > Euro für
-			<select name="nutzer" >
-				<option value="---">----</option>{% for u in users %}
-				<option value="{{ u }}">{{ u.first_name }} {{ u.last_name }}</option>{% endfor %}
-			</select>
-		ein.
-		<input type="submit" name="submit" value="einzahlen">
-		</form>
 {% endif %}
 
 {% if buys %}
 		<p>Deine letzten K&auml;ufe waren:</p>
 		<table>
 			<tr>
-				<th>Product</th>
+				<th>Produkt</th>
 				<th>Anzahl</th>
 				<th>Kosten</th>
 				<th>Zeitpunkt</th>
 			</tr>
-	{% for buy in buys reversed %}
-			<tr>
+	{% for buy in buys reversed %}		<tr>
 				<td>{{ buy.buy_product }}</td>
 				<td>{{ buy.buy_count }}</td>
 				<td>{{ buy.buy_total|floatformat:2 }}</td>

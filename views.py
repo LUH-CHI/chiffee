@@ -27,6 +27,19 @@ def showhistory(request):
 		context['buys'] = Buy.objects.filter(buy_user=request.user)
 	except Buy.DoesNotExist:
 		pass
+	try:
+		u2 = request.user.employee
+	except Employee.DoesNotExist:
+		u2 = Employee(user=request.user)
+		u2.save()
+	context['balance'] = u2.balance
+	return render(request, 'chiffee/history.html', context)
+
+@login_required(login_url='chiffee:login')
+def showoverview(request):
+	context = {}
+	context['users'] = User.objects.all()
+
 	if "POST" == request.method and "neu1" in request._post.keys():
 		user = authenticate(username=request.user.username, password=request._post["old"])
 		if user is not None:
@@ -69,7 +82,28 @@ def showhistory(request):
 		u2 = Employee(user=request.user)
 		u2.save()
 	context['balance'] = u2.balance
-	return render(request, 'chiffee/history.html', context)
+	return render(request, 'chiffee/overview.html', context)
+
+@login_required(login_url='chiffee:login')
+def showmoney(request):
+	context = {}
+	context['users'] = []
+	if request.user.is_superuser:
+		for u in User.objects.all():
+			try:
+				u2 = {};
+				u2['first_name'] = u.first_name
+				u2['last_name'] = u.last_name
+				u2['balance'] = u.employee.balance
+				context['users'].append(u2)
+			except:
+				pass
+	return render(request, 'chiffee/money.html', context)
+
+@login_required(login_url='chiffee:login')
+def showproducts(request):
+	context = {}
+	return render(request, 'chiffee/productoverview.html', context)
 
 def products(request):
 	context = {}

@@ -8,7 +8,7 @@ CATEGORIES = (
 		('F', 'Snacks'),
 		('I', 'Eis'),
 	)
-    
+
 class Product(models.Model):
 	product_name = models.CharField(max_length=200)
 	product_price = models.FloatField()
@@ -28,7 +28,7 @@ class Buy(models.Model):
 
 	def __str__(self):              # __unicode__ on Python 2
 		return (str(self.buy_user) + " bought " + str(self.buy_count) + " "  + str(self.buy_product))
-		
+
 class Deposit(models.Model):
 	deposit_date = models.DateTimeField(auto_now_add=True)
 	deposit_value = models.FloatField(default=0.0)

@@ -1,0 +1,22 @@
+{% extends "chiffee/base.html" %}
+
+
+{% block body %}
+{% if error %}
+		<h2 align="center" >{{ error }}</h2>
+{% endif %}
+
+		<p>
+			<a href="{% url 'chiffee:home' %}">&Uuml;bersicht</a>
+			<a href="{% url 'chiffee:history' %}">K&auml;ufe</a>{% if user.is_superuser %}
+			<a href="{% url 'chiffee:money' %}">Konto&uuml;bersicht</a>
+			<a href="{% url 'chiffee:prod' %}">Produkt&uuml;bersicht</a>
+{% endif %}			<a href="{% url 'chiffee:logout' %}" >Logout</a>
+		</p>
+
+{% block logedinbody %}
+
+{% endblock %}
+
+{% endblock %}
+
