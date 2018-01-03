@@ -8,7 +8,7 @@ from django.views import generic
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.contrib.auth import authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group
 
 from pprint import pprint
@@ -102,8 +102,11 @@ def showmoney(request):
 	return render(request, 'chiffee/money.html', context)
 
 @login_required(login_url='chiffee:login')
+@user_passes_test(lambda u: u.is_superuser)
 def showproducts(request):
 	context = {}
+	context['categories'] = CATEGORIES
+	context['products'] = Product.objects.order_by('product_categorie')
 	return render(request, 'chiffee/productoverview.html', context)
 
 def products(request):

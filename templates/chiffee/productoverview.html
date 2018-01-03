@@ -7,5 +7,37 @@
 {% endif %}
 
 		<h2>Noch nicht implementiert!</h2>
+		<table>
+			<tr>
+				<th>
+					Active
+				</th>
+				<th>
+					Name
+				</th>
+				<th>
+					Price
+				</th>
+				<th>
+					Categorie
+				</th>
+			</tr>
+{% for cat in categories %}
+		{% for product in products %}{% if product.product_categorie == cat.0 %}
+			<tr>
+				<td>
+					<input type="checkbox" name="active_{{ product.product_name }}" {% if product.product_active == True %}checked="checked" {% endif %}>
+				</td>
+				<td>
+					{{ product.product_name }}
+				</td>
+				<td>
+					{{ product.product_price|floatformat:2 }}
+				</td>
+				<td>
+					{{ product.product_categorie }}
+				</td>
+			</tr>{% endif %}{% endfor %}{% endfor %}
+		</table>
 {% endblock %}
 
