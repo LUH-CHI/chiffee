@@ -89,13 +89,14 @@ def showmoney(request):
 	context = {}
 	context['users'] = []
 	if request.user.is_superuser:
-		for u in User.objects.all():
+		for u in User.objects.order_by('last_name', 'first_name'):
 			try:
 				u2 = {};
 				u2['first_name'] = u.first_name
 				u2['last_name'] = u.last_name
 				u2['balance'] = u.employee.balance
-				context['users'].append(u2)
+				if u.employee.balance != 0:
+					context['users'].append(u2)
 			except:
 				pass
 	return render(request, 'chiffee/money.html', context)
