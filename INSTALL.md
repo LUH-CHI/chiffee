@@ -118,3 +118,31 @@ available to use the application with for example
 
 Please also have a look first at the
 [Checklist](https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/).
+
+## Using the site
+
+### Creating the first user
+Before using the site, first a user has to be createt. This can be done
+using:
+
+```bash
+python manage.py createsuperuser
+```
+
+After creating the superuser, all configurations can be done in the
+admin panel under `/admin` or in the users home panels under `/home`
+
+### Managing products
+
+TODO
+
+### Managing users
+
+TODO
+
+### Making a deposit
+
+The superuser, or any other user with admin priviledges has the
+possebility to make a deposit for every user. This can be done in the
+home screen for a loged in superuser. Simple insert the amount and
+select a user from the drop-down menu.
