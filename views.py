@@ -72,7 +72,7 @@ def showoverview(request):
 			msg = msg + ("Du hast soeben %0.2f Euro gut geschrieben bekommen.\n\r" % (money))
 			msg = msg + ("Aktueller Kontostand: %7.2f Euro.\n\r\n\r" % (u2.balance))
 			msg = msg + ("Es dankt,\n\rKarlo Kaffeekasse\n\r")
-			email = EmailMessage(subject, msg, fromaddr, [profiteer.email])
+			email = EmailMessage("Gutschrift Kaffeekasse", msg, fromaddr, [profiteer.email])
 			email.send()
 		except:
 			context['error'] = "Irgendwas lief schief beim einzahlen"
