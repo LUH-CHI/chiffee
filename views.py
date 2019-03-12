@@ -3,7 +3,7 @@
 
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
