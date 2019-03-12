@@ -21,8 +21,8 @@ class Product(models.Model):
 class Buy(models.Model):
 	buy_date = models.DateTimeField(auto_now_add=True)
 	buy_count = models.IntegerField()
-	buy_product = models.ForeignKey(Product)
-	buy_user = models.ForeignKey(User, default=None)
+	buy_product = models.ForeignKey(Product, on_delete=models.PROTECT) # it is not possible to delete a 'Product'
+	buy_user = models.ForeignKey(User, default=None, on_delete=models.CASCADE) # if the user is deleted, delete this 'Buy' too.
 	buy_total = models.FloatField(default=0.0)
 	buy_address = models.CharField(max_length=20, default="keine")
 
@@ -32,14 +32,14 @@ class Buy(models.Model):
 class Deposit(models.Model):
 	deposit_date = models.DateTimeField(auto_now_add=True)
 	deposit_value = models.FloatField(default=0.0)
-	deposit_user = models.ForeignKey(User, default=None)
+	deposit_user = models.ForeignKey(User, default=None, on_delete=models.CASCADE)
 
 	def __str__(self):              # __unicode__ on Python 2
 		return (str(self.deposit_user) + " (" + str(self.deposit_value) + ")")
 
 
 class Employee(models.Model):
-	user = models.OneToOneField(User)
+	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	balance = models.FloatField(default=0.0)
 	allMails = models.BooleanField(default=True)
 

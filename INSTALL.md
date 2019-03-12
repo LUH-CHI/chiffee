@@ -33,17 +33,17 @@ git clone https://github.com/LUH-CHI/chiffee.git
 Now use your default editor to change the file `mysite/urls.py` and add
 the following and change the import statement:
 ```python
-    url(r'^', include('chiffee.urls', namespace="chiffee")),
+    path('', include(('chiffee.urls', 'chiffee'), namespace="chiffee")),
 ```
 
 It should afterwards look something like this:
 ```python
-from django.conf.urls import include, url
 from django.contrib import admin
+from django.urls import path, include
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^', include('chiffee.urls', namespace="chiffee")),
+    path('admin/', admin.site.urls),
+    path('', include(('chiffee.urls', 'chiffee'), namespace="chiffee")),
 ]
 ```
 
