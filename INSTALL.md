@@ -10,6 +10,13 @@ python -m django --version
 If not, please follow the installation guide at
 https://docs.djangoproject.com/en/2.0/intro/install/
 
+## LDAP authentication
+You can use LDAP to authenticate your users. You'll need the following packages:
+```bash
+pip3 install python-ldap django-auth-ldap
+```
+Further help: https://django-auth-ldap.readthedocs.io/en/latest/install.html
+
 ## Development environment
 
 ### Create Project
@@ -81,6 +88,56 @@ INSTALLED_APPS = [
 ]
 ```
 
+#### Change Settings for LDAP
+If you do not want to authenticate with LDAP, skip this.
+Add the following lines to the file `mysite/settings.py` and change it to your needs.
+
+```bash
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfUniqueNamesType
+
+# LDAP Authentication
+AUTH_LDAP_SERVER_URI = "" # required
+PORT = 389
+AUTH_LDAP_START_TLS = True # make sure cert exists; False for testing only
+AUTH_LDAP_BIND_DN = "" # optional
+AUTH_LDAP_BIND_PASSWORD = "" # required when BIND_DN is used
+
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    'dc=example,dc=com', # modify user search
+    ldap.SCOPE_SUBTREE,
+    '(uid=%(user)s)',
+)
+
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+    'ou=group,dc=example,dc=com', # modify group search
+    ldap.SCOPE_SUBTREE,
+    '(objectClass=groupOfUniqueNames)',
+)
+
+# modify mapping from ldap entry to django users
+# if user already exists, all values specified here will overwrite existing
+AUTH_LDAP_USER_ATTR_MAP = {
+    "username": "uid",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+}
+
+AUTH_LDAP_GROUP_TYPE = GroupOfUniqueNamesType(name_attr='cn')
+AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+    "is_superuser": "cn=,ou=,dc=example,dc=com", # modify permission by group
+}
+
+# remove ModelBackend for LDAP authentication only
+# remove LDAPBackend for django authentication only
+# order of entries important if user exists in both backends
+# first entry queried first and LDAP overwrites existing user values!
+AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+```
 ### Make migrations
 Run the following commands to initialize the models and the database:
 ```bash
