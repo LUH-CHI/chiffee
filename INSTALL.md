@@ -140,12 +140,10 @@ AUTHENTICATION_BACKENDS = [
 ```
 
 #### Automatic LDAP Synchronization
-You may need to customize some lines in 'mysite/chiffee/management/commands/syncldap.py'.
-You can either manually synchronize with LDAP
-```bash
-python3 manage.py syncldap
-```
-Or use a cronjob to sync e.g. every day at 23.59.
+The django command `syncldap` can synchronize LDAP users with the local database. New users from LDAP are added and deleted users are marked inactive.
+Some customizations may be necessary in `mysite/chiffee/management/commands/syncldap.py`.
+
+Either execute the command manually or use a cronjob to sync e.g. every day at 23.59.
 ```bash
 crontab -e
 59 23 * * * cd /home/user/chiffee/mysite && python3 manage.py syncldap

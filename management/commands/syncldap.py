@@ -35,6 +35,10 @@ class Command(BaseCommand):
 
 			user = LDAPBackend().populate_user(u[1]['uid'][0].decode('UTF-8'))
 			user.is_active = True
+
+			# add a single group (wimi, stud, prof) to a user
+			# has to be rewritten if group information is not stored per user
+			# but instead each group in ldap stores its member!
 			try:
 				groups = u[1]['group'] # customize this
 			except KeyError:
