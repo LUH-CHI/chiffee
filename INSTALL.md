@@ -102,9 +102,9 @@ PORT = 389
 AUTH_LDAP_START_TLS = True # make sure cert exists; False for testing only
 AUTH_LDAP_BIND_DN = "" # optional
 AUTH_LDAP_BIND_PASSWORD = "" # required when BIND_DN is used
-
+BASE_DN = 'dc=example,dc=com' # modify user search
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    'dc=example,dc=com', # modify user search
+    BASE_DN
     ldap.SCOPE_SUBTREE,
     '(uid=%(user)s)',
 )
@@ -138,6 +138,19 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 ```
+
+#### Automatic LDAP Synchronization
+You may need to customize some lines in 'mysite/chiffee/management/commands/syncldap.py'.
+You can either manually synchronize with LDAP
+```bash
+python3 manage.py syncldap
+```
+Or use a cronjob to sync e.g. every day at 23.59.
+```bash
+crontab -e
+59 23 * * * cd /home/user/chiffee/mysite && python3 manage.py syncldap
+```
+
 ### Make migrations
 Run the following commands to initialize the models and the database:
 ```bash
