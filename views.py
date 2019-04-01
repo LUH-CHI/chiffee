@@ -2,7 +2,7 @@
 # encoding=utf8
 
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
@@ -10,11 +10,12 @@ from django.core.mail import EmailMessage
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group
+from django.forms import formset_factory
 
 from pprint import pprint
 
 from .models import Product, Buy, CATEGORIES, Employee, Deposit
-
+from .forms import ProductForm
 
 fromaddr = "kaffeekasse@chi.uni-hannover.de"
 subject  = "Kauf Kaffeekasse"
@@ -157,3 +158,48 @@ def confirmed(request,productID, userID,count):
 		email.send()
 	return render(request, 'chiffee/confirmed.html', context)
 
+#@login_required(login_url='chiffee:login')
+#@user_passes_test(lambda u: u.is_superuser)
+def checkactive(request,productID):
+	product = Product.objects.get(product_name=productID)
+	is_active = True if request.POST['active'].lower() == 'true' else False
+	product.product_active = is_active
+	product.save()
+	return JsonResponse({'success': True})
+
+# return a list of all products
+def get_product_list():
+	initial = [{'product_active': True, 'product_name': '', 'product_price': '', 'product_categorie': ''}]
+	for prod in Product.objects.all():
+		initial.append({'product_active': prod.product_active, 'product_name': prod.product_name,
+						'product_price': prod.product_price, 'product_categorie': prod.product_categorie})
+	return initial
+
+#@login_required(login_url='chiffee:login')
+#@user_passes_test(lambda u: u.is_superuser)
+def editproducts(request):
+	ProdForm = formset_factory(ProductForm, extra=0)
+
+	# fetch changes in form
+	if request.method == 'POST':
+		initial = get_product_list()
+		formset = ProdForm(request.POST, initial=initial)
+		if formset.has_changed():
+			for form in formset:
+				# form.cleaned_data is ONLY accesible AFTER form.is_valid() has been called!
+				if form.is_valid() and form.has_changed():
+					# new product
+					if form.initial['product_name'] == '':
+						product = Product(**form.cleaned_data)
+					else:
+						product = Product.objects.get(product_name=form.initial['product_name'])
+					for v in form.changed_data:
+						setattr(product, v, form.cleaned_data[v])
+					product.save()
+		return showproducts(request)
+
+	initial = get_product_list()
+	formset = ProdForm(initial=initial)
+	context = {}
+	context['formset'] = formset
+	return render(request, 'chiffee/productedit.html', context)
