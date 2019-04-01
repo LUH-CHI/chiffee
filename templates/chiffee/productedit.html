@@ -1,0 +1,33 @@
+{% extends "chiffee/base.html" %}
+
+{% block body %}
+
+<form action="/products/" method="post">
+{% csrf_token %}
+{{ formset.management_form }}
+	<table>
+		<tr>
+			<th>
+				Active
+			</th>
+			<th>
+				Name
+			</th>
+			<th>
+				Price
+			</th>
+			<th>
+				Categorie
+			</th>
+		</tr>
+		{% for form in formset %}
+			<tr>
+			{% for field in form %}
+				<td>{{ field }}</td>
+			{% endfor %}
+			</tr>
+		{% endfor %}
+	</table>
+<input type="submit" value="Save">
+</form>
+{% endblock %}
