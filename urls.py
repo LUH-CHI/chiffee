@@ -10,6 +10,9 @@ urlpatterns = [
     url(r'^money/$', views.showmoney, name='money'),
     url(r'^prod/$', views.showproducts, name='prod'),
     url(r'^history/$', views.showhistory, name='history'),
+    url(r'^purchase-history/$',
+        views.show_purchase_history,
+        name='purchase-history'),
     url(r'^products/$', views.editproducts, name='products'),
 
     url(r'^$', views.products, name='index'),
@@ -17,5 +20,4 @@ urlpatterns = [
 	url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/active/$', views.checkactive, name='active'),
     url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/(?P<userID>[a-z,A-Z,\s]+)/$', views.confirm, name='confirm'),
     url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/(?P<userID>[a-z,A-Z,\s]+)/(?P<count>[0-9]+)$', views.confirmed, name='confirmed'),
-
 ]

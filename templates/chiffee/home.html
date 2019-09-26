@@ -2,21 +2,26 @@
 
 
 {% block body %}
-{% if error %}
-		<h2 align="center" >{{ error }}</h2>
-{% endif %}
+    {% if error %}
+        <h2 align="center">{{ error }}</h2>
+    {% endif %}
 
-		<p>
-			<a href="{% url 'chiffee:home' %}">&Uuml;bersicht</a>
-			<a href="{% url 'chiffee:history' %}">K&auml;ufe</a>{% if user.is_superuser %}
-			<a href="{% url 'chiffee:money' %}">Konten&uuml;bersicht</a>
-			<a href="{% url 'chiffee:prod' %}">Produkt&uuml;bersicht</a>
-{% endif %}			<a href="{% url 'chiffee:logout' %}" >Logout</a>
-		</p>
+    <p>
+        <a href="{% url 'chiffee:home' %}">&Uuml;bersicht</a>
+        <a href="{% url 'chiffee:history' %}">K&auml;ufe</a>
 
-{% block logedinbody %}
+        {% if user.is_superuser %}
+            <a href="{% url 'chiffee:money' %}">Konten&uuml;bersicht</a>
+            <a href="{% url 'chiffee:prod' %}">Produkt&uuml;bersicht</a>
+            <a href="{% url 'chiffee:purchase-history' %}">Purchase History</a>
+        {% endif %}
 
-{% endblock %}
+        <a href="{% url 'chiffee:logout' %}">Logout</a>
+    </p>
+
+    {% block logedinbody %}
+
+    {% endblock %}
 
 {% endblock %}
 
