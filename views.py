@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 # encoding=utf8
 
-from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect, JsonResponse
-from django.urls import reverse
-from django.views import generic
-from django.contrib.auth.models import User
-from django.core.mail import EmailMessage
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group
+from django.contrib.auth.models import User
+from django.core.mail import EmailMessage
 from django.forms import formset_factory
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
 
-from pprint import pprint
-
-from .models import Product, Buy, CATEGORIES, Employee, Deposit
+from chiffee.filters import BuyFilter
 from .forms import ProductForm
+from .models import Buy, CATEGORIES, Deposit, Employee, Product
 
 fromaddr = "kaffeekasse@chi.uni-hannover.de"
 subject  = "Kauf Kaffeekasse"
@@ -109,6 +106,32 @@ def showproducts(request):
 	context['categories'] = CATEGORIES
 	context['products'] = Product.objects.order_by('product_categorie')
 	return render(request, 'chiffee/productoverview.html', context)
+
+
+@login_required(login_url='chiffee:login')
+@user_passes_test(lambda user: user.is_superuser)
+def show_purchase_history(request):
+	purchase_filter = BuyFilter(request.GET)
+	all_products = Product.objects.all()
+	purchases = {}
+	total = 0
+
+	for product in all_products:
+		counter = 0
+
+		for purchase in purchase_filter.qs:
+			if purchase.buy_product.product_name == product.product_name:
+				counter += 1
+
+		purchases[product.product_name] = counter
+		total += counter
+
+	context = {'filter': purchase_filter,
+			   'total': total,
+			   'purchases': purchases}
+
+	return render(request, 'chiffee/purchase_history.html', context)
+
 
 def products(request):
 	context = {}
