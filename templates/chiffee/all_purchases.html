@@ -1,0 +1,60 @@
+{% extends "chiffee/base.html" %}
+
+{% block body %}
+    <form method="get">
+        <div class="row">
+            <div class="col-2 form-group">
+                <label>Benutzer:</label>
+                <div>{{ filter.form.user }}</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-2 form-group">
+                <label>Produkt:</label>
+                <div>{{ filter.form.product }}</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-2 form-group">
+                <label>Datum:</label>
+                <div>{{ filter.form.date }}</div>
+            </div>
+        </div>
+
+        <button class="btn btn-lg btn-primary" type="submit">Suche</button>
+    </form>
+
+    <br>
+
+    <p>Gesamtzahl der Einkäufe: {{ total_counter }}</p>
+
+    {% if total_counter > 0 %}
+        <div class="table-responsive">
+            <table class="table table-borderless table-dark table-striped">
+                <thead class="thead-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Produktname</th>
+                    <th>Menge</th>
+                    <th>Gesamtpreis</th>
+                    <th>Datum</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for purchase in filter.qs %}
+                    <tr>
+                        <td>{{ purchase.user.last_name }} {{ purchase.user.first_name }}</td>
+                        <td>{{ purchase.product.name }}</td>
+                        <td>{{ purchase.quantity }}</td>
+                        <td>{{ purchase.total_price }}</td>
+                        <td>{{ purchase.date }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

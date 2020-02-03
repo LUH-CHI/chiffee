@@ -1,0 +1,32 @@
+{% extends "chiffee/base.html" %}
+
+{% block body %}
+    <p>Saldo: €{{ balance|floatformat:-2 }}</p>
+
+    {% if purchases %}
+        <table class="table table-borderless table-dark table-striped">
+            <thead class="thead-light">
+            <tr>
+                <th scope="col">Produktname</th>
+                <th scope="col">Menge</th>
+                <th scope="col">Gesamtpreis</th>
+                <th scope="col">Datum</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.product.name }}</td>
+                    <td>{{ purchase.quantity }}</td>
+                    <td>€{{ purchase.total_price|floatformat:-2 }}</td>
+                    <td>{{ purchase.date }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Du hast noch nichts gekauft.</p>
+    {% endif %}
+{% endblock %}
+

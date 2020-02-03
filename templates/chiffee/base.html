@@ -1,53 +1,121 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Chiffee</title>
-		<style>
-		body{
-			font-size: 200%;
-			background-color: #555555;
-			color: white;
-		}
-		a:link, a:visited {
-			background-color: #5086de;
-			color: white;
-			padding: 40px 50px;
-			margin: 10px;
-			width: 330px;
-			text-align: center;
-			text-decoration: none;
-			display: inline-block;
-		}
-		a:hover, a:active {
-			background-color: #50de78;
-		}
-		a.Eis {
-			background-color: #de6750;
-		}
-		a.Snacks {
-			background-color: #50de78;
-		}
-		a.Trinken {
-			background-color: #5086de;
-		}
-		</style>
-	{% block head %}{% endblock %}
-	<script>
-	function Time() {
-		var today = new Date();
-		var h = today.getHours();
-		var m = today.getMinutes();
-		if (m < 10) {
-			m = "0" + m;
-		}
-		document.getElementById('headline').innerHTML =
-		"Chiffee - " + h + ":" + m + " Uhr";
-		var t = setTimeout(Time, 5000);
-	}
-	</script>
-	</head>
-	<body onload="Time()">
-		<h1 align="center" id="headline">Chiffee</h1>
-	{% block body %}{% endblock %}
-	</body>
+
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="/static/chiffee/bootstrap/css/bootstrap.min.css">
+
+    <title>Chiffee</title>
+
+    <style>
+        body {
+            background-color: #233342;
+            color: white;
+            font-family: Verdana, Geneva, sans-serif;
+            font-size: 150%;
+        }
+
+        .navbar-brand {
+            font-size: 250%;
+        }
+
+        .navbar-brand, .navbar-brand:hover {
+            color: #b35340;
+        }
+
+        .nav-link {
+            color: white;
+        }
+
+        .nav-link:hover {
+            color: #999999;
+        }
+
+        .navbar-brand, .nav-link {
+            outline: none;
+        }
+
+        .nav-link-with-right-border {
+            border-color: #b35340;
+            border-style: solid;
+            border-width: 0 5px 0 0;
+        }
+
+        .navbar-text {
+            color: #b35340;
+            cursor: default;
+            font-size: 200%;
+        }
+
+        .container-fluid {
+            margin-top: 20px;
+        }
+
+        .btn-menu {
+            font-size: 100%;
+            height: 125px;
+        }
+
+        .number-input {
+            width: 50px;
+        }
+    </style>
+
+    {% block head %} {% endblock %}
+
+    <script>
+        function time() {
+            let today = new Date();
+            let hours = today.getHours();
+            let minutes = today.getMinutes();
+
+            if (minutes < 10) {
+                minutes = "0" + minutes;
+            }
+
+            document.getElementsByClassName("navbar-text")[0].textContent = hours + ":" + minutes;
+            setTimeout(time, 5000);
+        }
+    </script>
+
+    {% block scripts %} {% endblock %}
+</head>
+
+<body onload="time()">
+<nav class="navbar navbar-expand">
+    <a class="navbar-brand" href="{% url 'chiffee:index' %}">Chiffee</a>
+
+    <div class="navbar-nav mr-auto">
+        {% if user.is_authenticated %}
+            <a class="nav-item nav-link nav-link-with-right-border" href="{% url 'chiffee:view-my-purchases' %}">
+                Meine Einkäufe
+            </a>
+
+            {% if user.is_superuser %}
+                <a class="nav-item nav-link nav-link-with-right-border" href="{% url 'chiffee:view-accounts' %}">
+                    Konten
+                </a>
+                <a class="nav-item nav-link nav-link-with-right-border" href="{% url 'chiffee:view-products' %}">
+                    Produkte
+                </a>
+                <a class="nav-item nav-link nav-link-with-right-border" href="{% url 'chiffee:view-all-purchases' %}">
+                    Alle Einkäufe
+                </a>
+            {% endif %}
+
+            <a class="nav-item nav-link" href="{% url 'chiffee:logout' %}">Abmeldung</a>
+        {% else %}
+            <a class="nav-item nav-link" href="{% url 'chiffee:login' %}">Einloggen</a>
+        {% endif %}
+    </div>
+
+    <div class="navbar-text"></div>
+</nav>
+
+<div class="container-fluid">
+    {% block body %} {% endblock %}
+</div>
+</body>
 </html>
