@@ -1,7 +1,7 @@
 # Chiffee
 
-A simple web server we use for buying coffee and sweets at the institute of Computational Health Informatics of Leibniz 
-Universität Hannover.
+A simple web server we use for buying coffee and sweets at the institute of Computational Health Informatics of the 
+Leibniz Universität Hannover.
 
 ## Disclaimer
 
