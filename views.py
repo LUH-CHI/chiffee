@@ -1,228 +1,363 @@
-#!/usr/bin/env python
-# encoding=utf8
+from itertools import chain
 
-from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import User
-from django.core.mail import EmailMessage
-from django.forms import formset_factory
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.models import Group, User
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from django.urls import reverse
 
-from chiffee.filters import BuyFilter
-from .forms import ProductForm
-from .models import Buy, CATEGORIES, Deposit, Employee, Product
+from chiffee.filters import PurchaseFilter
+from .models import CATEGORIES, Employee, Product, Purchase
 
-fromaddr = "kaffeekasse@chi.uni-hannover.de"
-subject  = "Kauf Kaffeekasse"
+EMAIL_ADDRESS = 'kaffeekasse@chi.uni-hannover.de'
+EMAIL_SUBJECT = 'Kauf Kaffeekasse'
 
-@login_required(login_url='chiffee:login')
-def showhistory(request):
-	context = {}
-	context['users'] = User.objects.all()
-	try:
-		context['buys'] = Buy.objects.filter(buy_user=request.user)
-	except Buy.DoesNotExist:
-		pass
-	try:
-		u2 = request.user.employee
-	except Employee.DoesNotExist:
-		u2 = Employee(user=request.user)
-		u2.save()
-	context['balance'] = u2.balance
-	return render(request, 'chiffee/history.html', context)
-
-@login_required(login_url='chiffee:login')
-def showoverview(request):
-	context = {}
-	context['users'] = User.objects.all()
-
-	if "POST" == request.method and "neu1" in request._post.keys():
-		user = authenticate(username=request.user.username, password=request._post["old"])
-		if user is not None:
-			# A backend authenticated the cred
-			if request._post["neu1"] == request._post["neu2"]:
-				user.set_password(request._post["neu1"])
-				user.save()
-				context["error"] = "Passwort geändert"
-			else:
-				context["error"] = "Die neuen Passwörter stimmen nicht überein!"
-		else:
-			# No backend authenticated the credentials
-			context['error'] = "Passwort nicht korrekt!"
-
-	if request.user.is_superuser and "POST" == request.method and "nutzer" in request._post.keys():
-		try:
-			profiteer = User.objects.get(username=request._post["nutzer"])
-			money = float(request._post["value"])
-			d = Deposit(deposit_user = profiteer, deposit_value = money)
-			d.save()
-			try:
-				u2 = profiteer.employee
-			except Employee.DoesNotExist:
-				u2 = Employee(user=profiteer)
-			u2.balance = u2.balance + money
-			u2.save()
-			context['payment'] = d
-			msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n" % (fromaddr,profiteer.email,"Gutschrift Kaffeekasse"))
-			msg = ("Hallo %s %s.\n\r\n\r" % (profiteer.first_name, profiteer.last_name))
-			msg = msg + ("Du hast soeben %0.2f Euro gut geschrieben bekommen.\n\r" % (money))
-			msg = msg + ("Aktueller Kontostand: %7.2f Euro.\n\r\n\r" % (u2.balance))
-			msg = msg + ("Es dankt,\n\rKarlo Kaffeekasse\n\r")
-			email = EmailMessage("Gutschrift Kaffeekasse", msg, fromaddr, [profiteer.email])
-			email.send()
-		except:
-			context['error'] = "Irgendwas lief schief beim einzahlen"
-	try:
-		u2 = request.user.employee
-	except Employee.DoesNotExist:
-		u2 = Employee(user=request.user)
-		u2.save()
-	context['balance'] = u2.balance
-	return render(request, 'chiffee/overview.html', context)
-
-@login_required(login_url='chiffee:login')
-def showmoney(request):
-	context = {}
-	context['users'] = []
-	if request.user.is_superuser:
-		for u in User.objects.order_by('last_name', 'first_name'):
-			try:
-				u2 = {};
-				u2['first_name'] = u.first_name
-				u2['last_name'] = u.last_name
-				u2['balance'] = u.employee.balance
-				if u.employee.balance != 0:
-					context['users'].append(u2)
-			except:
-				pass
-	return render(request, 'chiffee/money.html', context)
-
-@login_required(login_url='chiffee:login')
-@user_passes_test(lambda u: u.is_superuser)
-def showproducts(request):
-	context = {}
-	context['categories'] = CATEGORIES
-	context['products'] = Product.objects.order_by('product_categorie')
-	return render(request, 'chiffee/productoverview.html', context)
+QUANTITY_RANGE = range(1, 6)
 
 
-@login_required(login_url='chiffee:login')
+def index(request):
+    if request.method == 'GET':
+        products = Product.objects.order_by('category', 'name')
+        active_products = []
+
+        for product in products:
+            if product.active:
+                active_products.append(product)
+
+        context = {'categories': CATEGORIES,
+                   'active_products': active_products}
+
+        return render(request, 'chiffee/index.html', context)
+
+    return render(request, 'chiffee/redirect.html')
+
+
+def make_purchases(request, quantity=1):
+    while True:
+        if request.method == 'POST' and 'product-name' in request.POST:
+            products = Product.objects.filter(name=request.POST['product-name'])
+
+            if products.exists():
+                product = products[0]
+
+                if 'quantity' in request.POST:
+                    try:
+                        new_quantity = int(request.POST['quantity'])
+                    except ValueError:
+                        break
+
+                    if new_quantity not in QUANTITY_RANGE:
+                        break
+
+                    quantity = new_quantity
+
+                if Group.objects.filter(name="professors").exists():
+                    groups = Group.objects.get(name="professors")
+                    professors = groups.user_set.all().order_by('username')
+                else:
+                    professors = Group.objects.none()
+
+                if Group.objects.filter(name="employees").exists():
+                    groups = Group.objects.get(name="employees")
+                    employees = groups.user_set.all().order_by('username')
+                else:
+                    employees = Group.objects.none()
+
+                if Group.objects.filter(name="students").exists():
+                    groups = Group.objects.get(name="students")
+                    students = groups.user_set.all().order_by('username')
+                else:
+                    students = Group.objects.none()
+
+                users = list(chain(professors, employees, students))
+                context = {'product': product,
+                           'quantity': quantity,
+                           'quantity_range': QUANTITY_RANGE,
+                           'total_price': quantity * product.price,
+                           'users': users}
+
+                return render(request, 'chiffee/make_purchase.html', context)
+
+        break
+
+    return render(request, 'chiffee/redirect.html')
+
+
+def confirm_purchases(request):
+    while True:
+        if (request.method == 'POST'
+                and 'confirm' in request.POST
+                and 'name' in request.POST
+                and 'quantity' in request.POST):
+            products = Product.objects.filter(name=request.POST['name'])
+
+            if products.exists():
+                product = products[0]
+
+                try:
+                    quantity = int(request.POST['quantity'])
+                except ValueError:
+                    break
+
+                if quantity not in QUANTITY_RANGE:
+                    break
+
+                user = None
+
+                if request.user.is_authenticated:
+                    user = request.user
+                else:
+                    users = User.objects.filter(
+                        username=request.POST['confirm'])
+
+                    if users.exists():
+                        user = users[0]
+
+                if user is not None:
+                    try:
+                        employee = user.employee
+                    except Employee.DoesNotExist:
+                        employee = Employee.objects.create(user=user)
+
+                    total_price = product.price * quantity
+                    employee.balance -= total_price
+                    employee.save()
+
+                    new_purchase = Purchase.objects.create(
+                        user=user,
+                        product=product,
+                        quantity=quantity,
+                        total_price=total_price)
+                    url = request.get_raw_uri().replace(
+                        request.get_full_path(), '')
+                    url += reverse('chiffee:cancel-purchases',
+                                   kwargs={'key': new_purchase.key})
+
+                    if employee.get_all_emails:
+                        message = ('Hallo {} {}.\n\n'
+                                   'Sie haben {} {} '
+                                   'für insgesamt €{:.2f} gekauft.\n\n'
+                                   'Dein Guthaben ist jetzt €{:.2f}.\n\n'
+                                   'Wenn Sie diesen Kauf nicht getätigt haben, '
+                                   'klicken Sie hier: {}')
+                        message = message.format(user.first_name,
+                                                 user.last_name,
+                                                 quantity,
+                                                 product.name,
+                                                 total_price,
+                                                 employee.balance,
+                                                 url)
+
+                        send_mail(EMAIL_SUBJECT,
+                                  message,
+                                  EMAIL_ADDRESS,
+                                  [user.email],
+                                  fail_silently=False)
+
+                    context = {'done': True}
+
+                    return render(request, 'chiffee/redirect.html', context)
+
+        break
+
+    return render(request, 'chiffee/redirect.html')
+
+
+def cancel_purchases(request, key):
+    context = {}
+
+    if request.method == 'GET':
+        purchases = Purchase.objects.filter(key=key)
+
+        if purchases.exists():
+            purchase = purchases[0]
+
+            employee = purchase.user.employee
+            employee.balance += purchase.total_price
+            employee.save()
+
+            purchase.delete()
+            context['done'] = True
+
+    return render(request, 'chiffee/redirect.html', context)
+
+
+@login_required
+def view_my_purchases(request):
+    if request.method == 'GET':
+        purchases = Purchase.objects.filter(user=request.user)
+        employees = Employee.objects.filter(user=request.user)
+
+        if not employees.exists():
+            employee = Employee.objects.create(user=request.user)
+        else:
+            employee = employees[0]
+
+        context = {'purchases': purchases, 'balance': employee.balance}
+
+        return render(request, 'chiffee/my_purchases.html', context)
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
 @user_passes_test(lambda user: user.is_superuser)
-def show_purchase_history(request):
-	purchase_filter = BuyFilter(request.GET)
-	all_products = Product.objects.all()
-	purchases = {}
-	total = 0
+def view_accounts(request, edit_username=None):
+    context = {'users': User.objects.order_by('last_name', 'first_name')}
 
-	for product in all_products:
-		counter = 0
+    if request.method == 'GET':
+        return render(request, 'chiffee/accounts.html', context)
+    elif request.method == 'POST':
+        if edit_username is not None:
+            context['edit_username'] = edit_username
 
-		for purchase in purchase_filter.qs:
-			if purchase.buy_product.product_name == product.product_name:
-				counter += 1
+        return render(request, 'chiffee/accounts.html', context)
 
-		purchases[product.product_name] = counter
-		total += counter
-
-	context = {'filter': purchase_filter,
-			   'total': total,
-			   'purchases': purchases}
-
-	return render(request, 'chiffee/purchase_history.html', context)
+    return render(request, 'chiffee/redirect.html')
 
 
-def products(request):
-	context = {}
-	context['categories'] = CATEGORIES
-	context['products'] = Product.objects.order_by('product_categorie')
-	return render(request, 'chiffee/products.html', context)
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def edit_accounts(request):
+    while True:
+        if request.method == 'POST' and 'edit' in request.POST:
+            users = User.objects.filter(username=request.POST['edit'])
 
-def users(request,productID):
-	get_object_or_404(Product, product_name=productID)
-	context = {}
-	context['product'] = productID
-	context['profs'] = Group.objects.get(name="prof").user_set.all().order_by('username')
-	context['wimi'] = Group.objects.get(name="wimi").user_set.all().order_by('username')
-	context['stud'] = Group.objects.get(name="stud").user_set.all().order_by('username')
-	return render(request, 'chiffee/user.html', context)
+            if users.exists():
+                return view_accounts(request, users[0].username)
+        elif (request.method == 'POST'
+              and 'confirm' in request.POST
+              and 'balance' in request.POST):
+            users = User.objects.filter(username=request.POST['confirm'])
 
-def confirm(request,productID, userID):
-	get_object_or_404(Product, product_name=productID)
-	user = get_object_or_404(User, username=userID)
-	context = {}
-	context['product'] = productID
-	context['user'] = userID
-	context['username'] = user.first_name + " " + user.last_name
-	return render(request, 'chiffee/confirm.html', context)
+            if users.exists():
+                user = users[0]
+                user.employee.balance = request.POST['balance']
 
-def confirmed(request,productID, userID,count):
-	product = get_object_or_404(Product, product_name=productID)
-	user = get_object_or_404(User, username=userID)
-	context = {}
-	b = Buy(buy_count = count, buy_product = product, buy_user = user, buy_address=request.environ['REMOTE_ADDR'], buy_total=(product.product_price * int(count)))
-	b.save()
-	try:
-		u2 = user.employee
-	except Employee.DoesNotExist:
-		u2 = Employee(user=user)
-		u2.save()
-	u2.balance = u2.balance - (product.product_price * int(count))
-	u2.save()
-	if u2.allMails:
-		msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n" % (fromaddr,user.email,subject))
-		msg = ("Hallo %s %s.\n\r\n\r" % (user.first_name, user.last_name))
-		msg = msg + ("Du hast soeben %d %s zu je %0.2f Euro gekauft.\n\r" % (int(count), product.product_name, product.product_price))
-		msg = msg + ("Das macht insgesamt:  %7.2f Euro.\n\r" % (product.product_price * int(count)))
-		msg = msg + ("Aktueller Kontostand: %7.2f Euro.\n\r\n\r" % (u2.balance))
-		msg = msg + ("Es dankt,\n\rKarlo Kaffeekasse\n\r")
-		email = EmailMessage(subject, msg, fromaddr, [user.email])
-		email.send()
-	return render(request, 'chiffee/confirmed.html', context)
+                try:
+                    user.employee.save()
+                except ValueError:
+                    break
 
-#@login_required(login_url='chiffee:login')
-#@user_passes_test(lambda u: u.is_superuser)
-def checkactive(request,productID):
-	product = Product.objects.get(product_name=productID)
-	is_active = True if request.POST['active'].lower() == 'true' else False
-	product.product_active = is_active
-	product.save()
-	return JsonResponse({'success': True})
+                return redirect('chiffee:view-accounts')
 
-# return a list of all products
-def get_product_list():
-	initial = [{'product_active': True, 'product_name': '', 'product_price': '', 'product_categorie': ''}]
-	for prod in Product.objects.all():
-		initial.append({'product_active': prod.product_active, 'product_name': prod.product_name,
-						'product_price': prod.product_price, 'product_categorie': prod.product_categorie})
-	return initial
+        break
 
-#@login_required(login_url='chiffee:login')
-#@user_passes_test(lambda u: u.is_superuser)
-def editproducts(request):
-	ProdForm = formset_factory(ProductForm, extra=0)
+    return render(request, 'chiffee/redirect.html')
 
-	# fetch changes in form
-	if request.method == 'POST':
-		initial = get_product_list()
-		formset = ProdForm(request.POST, initial=initial)
-		if formset.has_changed():
-			for form in formset:
-				# form.cleaned_data is ONLY accesible AFTER form.is_valid() has been called!
-				if form.is_valid() and form.has_changed():
-					# new product
-					if form.initial['product_name'] == '':
-						product = Product(**form.cleaned_data)
-					else:
-						product = Product.objects.get(product_name=form.initial['product_name'])
-					for v in form.changed_data:
-						setattr(product, v, form.cleaned_data[v])
-					product.save()
-		return showproducts(request)
 
-	initial = get_product_list()
-	formset = ProdForm(initial=initial)
-	context = {}
-	context['formset'] = formset
-	return render(request, 'chiffee/productedit.html', context)
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def view_products(request, edit_name=None):
+    active_products = Product.objects.filter(
+        active=True).order_by('category', 'name')
+    inactive_products = Product.objects.filter(active=False)
+
+    context = {'categories': CATEGORIES,
+               'active_products': active_products,
+               'inactive_products': inactive_products}
+
+    if request.method == 'GET':
+        return render(request, 'chiffee/products.html', context)
+    elif request.method == 'POST':
+        if edit_name is not None:
+            context['edit_name'] = edit_name
+
+        return render(request, 'chiffee/products.html', context)
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def edit_products(request):
+    while True:
+        if request.method == 'POST' and 'edit' in request.POST:
+            products = Product.objects.filter(name=request.POST['name'])
+
+            if products.exists():
+                return view_products(request, products[0].name)
+        elif (request.method == 'POST'
+              and 'confirm' in request.POST
+              and 'name' in request.POST
+              and 'price' in request.POST
+              and 'category' in request.POST):
+            products = Product.objects.filter(name=request.POST['confirm'])
+
+            if products.exists():
+                product = products[0]
+                product.name = request.POST['name']
+
+                try:
+                    product.save()
+                except ValueError:
+                    break
+
+                product.price = request.POST['price']
+
+                try:
+                    product.save()
+                except ValueError:
+                    break
+
+                for category in CATEGORIES:
+                    if request.POST['category'] == category[1]:
+                        product.category = category[0]
+                        break
+
+                if 'active' in request.POST and request.POST['active'] == 'on':
+                    product.active = True
+                else:
+                    product.active = False
+
+                product.save()
+
+                return redirect('chiffee:view-products')
+
+        break
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def restore_products(request):
+    if request.method == 'POST' and 'restore' in request.POST:
+        products = Product.objects.filter(name=request.POST['name'])
+
+        if products.exists():
+            product = products[0]
+            product.active = True
+            product.save()
+
+            return redirect('chiffee:view-products')
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def view_all_purchases(request):
+    if request.method == 'GET':
+        purchase_filter = PurchaseFilter(request.GET)
+        products = Product.objects.all()
+        purchases = {}
+        total_counter = 0
+
+        for product in products:
+            counter = 0
+
+            for purchase in purchase_filter.qs:
+                if purchase.product.name == product.name:
+                    counter += 1
+
+            purchases[product.name] = counter
+            total_counter += counter
+
+        context = {'filter': purchase_filter,
+                   'purchases': purchases,
+                   'total_counter': total_counter}
+
+        return render(request, 'chiffee/all_purchases.html', context)
+
+    return render(request, 'chiffee/redirect.html')
