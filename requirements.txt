@@ -1,0 +1,5 @@
+django
+django-auth-ldap
+django-filter
+python-dotenv
+python-ldap
