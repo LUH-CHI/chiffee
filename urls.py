@@ -1,23 +1,30 @@
-from django.conf.urls import url
 from django.contrib.auth import views as auth_views
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(r'^login/$', auth_views.LoginView.as_view(), {'template_name': 'chiffee/login.html'}, name='login'),
-    url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
-    url(r'^home/$', views.showoverview, name='home'),
-    url(r'^money/$', views.showmoney, name='money'),
-    url(r'^prod/$', views.showproducts, name='prod'),
-    url(r'^history/$', views.showhistory, name='history'),
-    url(r'^purchase-history/$',
-        views.show_purchase_history,
-        name='purchase-history'),
-    url(r'^products/$', views.editproducts, name='products'),
-
-    url(r'^$', views.products, name='index'),
-    url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/$', views.users, name='users'),
-	url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/active/$', views.checkactive, name='active'),
-    url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/(?P<userID>[a-z,A-Z,\s]+)/$', views.confirm, name='confirm'),
-    url(r'^(?P<productID>[a-z,A-Z,\s,\(,\),\,,0-9,\&]+)/(?P<userID>[a-z,A-Z,\s]+)/(?P<count>[0-9]+)$', views.confirmed, name='confirmed'),
+    path('accounts/edit/', views.edit_accounts, name='edit-accounts'),
+    path('accounts/', views.view_accounts, name='view-accounts'),
+    path('login/',
+         auth_views.LoginView.as_view(template_name='chiffee/login.html'),
+         name='login'),
+    path('logout/',
+         auth_views.LogoutView.as_view(next_page='chiffee:index'),
+         name='logout'),
+    path('products/edit/', views.edit_products, name='edit-products'),
+    path('products/restore/', views.restore_products, name='restore-products'),
+    path('products/', views.view_products, name='view-products'),
+    path('purchases/all/', views.view_all_purchases, name='view-all-purchases'),
+    path('purchases/cancel/<str:key>/',
+         views.cancel_purchases,
+         name='cancel-purchases'),
+    path('purchases/confirm/',
+         views.confirm_purchases,
+         name='confirm-purchases'),
+    path('purchases/make/', views.make_purchases, name='make-purchases'),
+    path('purchases/personal/',
+         views.view_my_purchases,
+         name='view-my-purchases'),
+    path('', views.index, name='index'),
 ]
