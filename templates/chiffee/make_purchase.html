@@ -38,25 +38,23 @@
                     <div class="row">
                 {% endif %}
 
-                {% if u.is_active %}
-                    <div class="col-3">
-                        {% if u|has_group:'professors' or u|has_group:'employees' or u|has_group:'students' %}
-                            <button class="btn btn-block btn-lg btn-menu
-                                        {% if u|has_group:'professors' %}
-                                            btn-primary
-                                        {% elif u|has_group:'employees' %}
-                                            btn-success
-                                        {% elif u|has_group:'students' %}
-                                            btn-danger
-                                        {% endif %}"
-                                    name="confirm"
-                                    type="submit"
-                                    value="{{ u.username }}">
-                                {{ u.first_name }} {{ u.last_name }}
-                            </button>
-                        {% endif %}
-                    </div>
-                {% endif %}
+                <div class="col-3">
+                    {% if u|has_group:'professors' or u|has_group:'employees' or u|has_group:'students' %}
+                        <button class="btn btn-block btn-lg btn-menu
+                                    {% if u|has_group:'professors' %}
+                                        btn-primary
+                                    {% elif u|has_group:'employees' %}
+                                        btn-success
+                                    {% elif u|has_group:'students' %}
+                                        btn-danger
+                                    {% endif %}"
+                                name="confirm"
+                                type="submit"
+                                value="{{ u.username }}">
+                            {{ u.first_name }} {{ u.last_name }}
+                        </button>
+                    {% endif %}
+                </div>
 
                 {% if forloop.counter|divisibleby:4 and not forloop.first %}
                     </div>
