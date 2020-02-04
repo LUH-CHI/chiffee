@@ -73,7 +73,7 @@ like this (don't leave an empty blank line at the end):
 LOGIN_REDIRECT_URL=chiffee:index
 LOGIN_URL=chiffee:login
 EMAIL_HOST=mailgate.uni-hannover.de
-SECRET_KEY=kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$
+SECRET_KEY='kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$'
 ```
 
 You should change `EMAIL_HOST` and `SECRET_KEY`, the latter can match any string of characters, ideally you should copy 
