@@ -65,14 +65,12 @@ urlpatterns = [
 It's a good practice to store important settings in a separate file instead of hard-coding them.
 
 Create a file named `.env` and place it in the root `mysite` directory (where `manage.py` is). This file should look 
-like this (don't leave an empty blank line at the end, Python dotenv cannot parse it): 
+like this (don't leave an empty blank line at the end): 
 ```
 LOGIN_REDIRECT_URL=chiffee:index
 LOGIN_URL=chiffee:login
-
 EMAIL_HOST=mailgate.uni-hannover.de
-
-SECRET_KEY="kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$"
+SECRET_KEY=kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$
 ```
 
 You should change `EMAIL_HOST` and `SECRET_KEY`, the latter can match any string of characters, ideally you should copy 
@@ -114,13 +112,28 @@ if __name__ == '__main__':
 
 ```
 
+If you're using WSGI, then you also have to modify your `mysite/wsgi.py`: 
+```
+import os
+
+import dotenv
+
+dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+
+from django.core.wsgi import get_wsgi_application
+
+application = get_wsgi_application()
+
+```
+
 ## Changing settings.py
 
 Add the following lines to `mysite/settings.py`:
 ```
 LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL')
 LOGIN_URL = os.getenv('LOGIN_URL')
-
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 ```
 
@@ -166,6 +179,9 @@ is and run the following command:
 ```
 python manage.py collectstatic
 ```
+
+Make sure to read [this section](https://docs.djangoproject.com/en/3.0/howto/deployment/wsgi/modwsgi/#serving-files) on 
+how to serve static files on your server.
 
 ## Migrating
 
@@ -341,7 +357,7 @@ Quit the server with CONTROL-C.
 The `runserver` command should only be used for development. Do not use it in production! 
 
 If you want to use Django in production, there are several guides available. For example, 
-[Apache](https://docs.djangoproject.com/en/2.2/howto/deployment/wsgi/modwsgi/).
+[Apache](https://docs.djangoproject.com/en/3.0/howto/deployment/wsgi/modwsgi/).
 
 Make sure to go through the official 
-[Deployment checklist](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/) as well.
+[Deployment checklist](https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/) as well.
