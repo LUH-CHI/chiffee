@@ -5,7 +5,7 @@
 To run Chiffee, you will first need Python 3, pip, and Django installed on the server. To do so, run the following 
 commands:
 ```
-sudo apt-get install python3 python3-pip
+sudo apt-get install python3 python3-pip virtualenv
 pip3 install django
 ```
 
@@ -27,7 +27,7 @@ Make sure to create a [virtual environment](https://docs.python.org/3/tutorial/v
 allow you to avoid any conflicts with existing system packages. We'll call the folder containing virtual environment 
 `venv`:
 ```
-virtualenv venv
+virtualenv -p python3 venv
 ```
 
 ## Cloning files from GitHub and installing required packages
