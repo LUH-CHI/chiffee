@@ -14,16 +14,7 @@ LDAP also requires some packages installed on the server. To do so, run the foll
 sudo apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev
 ```
 
-Make sure to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for the project, this will 
-allow you to avoid any conflicts with existing system packages.
-
-Once you create a virtual environment, activate it and install all packages listed [here](requirements.txt) by using 
-the following command:
-```
-pip install -r requirements.txt
-```
-
-## Creating a project
+## Creating a Django project and virtual environment
 
 To use Chiffee, we have to create a Django project first. This is done with the following command:
 ```
@@ -32,22 +23,32 @@ django-admin startproject mysite
 
 This will create a `mysite` directory in your current directory.
 
-## Cloning files from GitHub
+Make sure to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) inside `mysite`, this will 
+allow you to avoid any conflicts with existing system packages. We'll call the folder containing virtual environment 
+`venv`.
+
+## Cloning files from GitHub and installing required packages
 
 Go into the newly created `mysite` directory and clone this repository:
 ```
 git clone https://github.com/LUH-CHI/chiffee.git
 ```
 
-## Changing urls.py
+Now activate your virtual environment, navigate to the cloned folder `chiffee` and install all packages listed 
+[here](requirements.txt) by using the following command:
+```
+pip install -r requirements.txt
+```
 
-Now use your favorite code editor to change the file `mysite/urls.py` and add the following line to `urlpatterns`:
+## Adding Chiffee URL's to your project
+
+Now go back one level and change the file `mysite/urls.py` by adding the following line to `urlpatterns`:
 ```
 path('', include(('chiffee.urls', 'chiffee'), namespace='chiffee')),
 ```
 
-This will add Chiffee URL's to your project. The resulting `mysite/urls.py` will look like this (minus the comment at 
-the top):
+This will add Chiffee URL's to your `mysite` project. The resulting `mysite/urls.py` will look like this (don't forget 
+to add an import for `include`):
 ```
 from django.contrib import admin
 from django.urls import include, path
@@ -63,16 +64,15 @@ urlpatterns = [
 
 It's a good practice to store important settings in a separate file instead of hard-coding them.
 
-Create a file named `.env` and place it in `mysite` directory (where your `manage.py` is). This file should look like 
-this: 
+Create a file named `.env` and place it in the root `mysite` directory (where `manage.py` is). This file should look 
+like this (don't leave an empty blank line at the end, Python dotenv cannot parse it): 
 ```
 LOGIN_REDIRECT_URL=chiffee:index
 LOGIN_URL=chiffee:login
 
 EMAIL_HOST=mailgate.uni-hannover.de
 
-SECRET_KEY=kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$
-
+SECRET_KEY="kj8qe5q#g8e8ks^b@p@!z@3js%ndq@h=lu+jqr7l%#fo1ph8%$"
 ```
 
 You should change `EMAIL_HOST` and `SECRET_KEY`, the latter can match any string of characters, ideally you should copy 
@@ -81,12 +81,12 @@ it from `mysite/settings.py`.
 Users from the Leibniz Universität Hannover can leave `mailgate.uni-hannover.de` as their `EMAIL_HOST`.
 
 You also want to import these environment variables when your project runs. Add the following line to 
-`mysite/manage.py` inside the `main` function:
+`manage.py` inside the `main` function:
 ```
-dotenv.read_dotenv()
+dotenv.load_dotenv()
 ```
 
-It should look like this (minus the top part):
+It should look like this (don't forget the import):
 ```
 import os
 import sys
@@ -95,7 +95,7 @@ import dotenv
 
 
 def main():
-    dotenv.read_dotenv()
+    dotenv.load_dotenv()
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
     try:
@@ -118,15 +118,20 @@ if __name__ == '__main__':
 
 Add the following lines to `mysite/settings.py`:
 ```
-LOGIN_REDIRECT_URL=os.getenv('LOGIN_REDIRECT_URL')
-LOGIN_URL=os.getenv('LOGIN_URL')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL')
+LOGIN_URL = os.getenv('LOGIN_URL')
 
-EMAIL_HOST=os.getenv('EMAIL_HOST')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 ```
 
 Also change the `SECRET_KEY` variable:
 ```
-SECRET_KEY=os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
+```
+
+Change `DEBUG` if running in production:
+```
+DEBUG = False
 ```
 
 Add this variable right where `STATIC_URL` is:
@@ -148,18 +153,35 @@ INSTALLED_APPS = [
 ]
 ```
 
+Don't forget to modify `ALLOWED_HOSTS` to include your server address, for example:
+```
+ALLOWED_HOSTS = ['server.uni-hannover.de']
+```
+
 ## Adding Bootstrap
 
-To add static Bootstrap files to the project, run `python manage.py collectstatic`.
+Some servers might not be able to connect to the outer world and access Bootstrap online, for that purpose there's a 
+static CSS file inside Chiffee, but you have to make it available for your project. Navigate to where your `manage.py` 
+is and run the following command:
+```
+python manage.py collectstatic
+```
 
 ## Migrating
 
 ### 1.x to 2.0
 
 If you're moving to v2.0, follow these steps:
-  - Back up current database in case something goes wrong.
-  - Pull changes from GitHub.
-  - Run `python manage.py makemigrations --empty chiffee` which will generate an empty migrations file inside 
+  - Back up current database file `db.sqlite3` in case something goes wrong.
+  - Follow installation instructions as if it was a new project.
+  - Copy your database file to the project root directory.
+  - Now we need to update the database to the new design, this is where Django migrations come in.
+  - You need to copy all your old migrations into the new project first. To do this, copy the folder 
+  `chiffee/migrations` into your new project placing it under the same location. If your old project has no migrations 
+  for some reason, then generate them with `python manage.py makemigrations`.
+  - Navigate to your (new) project folder, activate virtual environment and run `python manage.py migrate --fake` which 
+  makes Django think that old migrations have already been applied to the database (which is sort of true).
+  - Now run `python manage.py makemigrations --empty chiffee` which will generate an empty migrations file inside 
   `chiffee/migrations`.
   - Open this file and replace the `operations` array with the following:
   ```
@@ -217,12 +239,8 @@ If you're moving to v2.0, follow these steps:
 
   from chiffee.models import CATEGORIES, generate_key
   ```
-  - Run these commands in sequence:
-  ```
-  python manage.py migrate
-  python manage.py makemigrations
-  python manage.py migrate
-  ```
+  - Now run `python manage.py migrate`, and if you followed the steps correctly, the new migration will be applied with 
+  no issues.
   
 ## Installing from scratch
 
