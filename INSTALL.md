@@ -32,7 +32,7 @@ virtualenv -p python3 venv
 
 ## Cloning files from GitHub and installing required packages
 
-Go into the newly created `mysite` directory and clone this repository:
+Clone this repository:
 ```
 git clone https://github.com/LUH-CHI/chiffee.git
 ```
