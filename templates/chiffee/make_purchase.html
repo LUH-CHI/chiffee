@@ -58,9 +58,6 @@
 
                 {% if forloop.counter|divisibleby:4 and not forloop.first %}
                     </div>
-                {% endif %}
-
-                {% if forloop.counter|divisibleby:4 and not forloop.first and not forloop.last %}
                     <br>
                 {% endif %}
             {% endfor %}
