@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## Adding Chiffee URL's to your project
 
-Now go back one level and change the file `mysite/urls.py` by adding the following line to `urlpatterns`:
+Now change the file `mysite/urls.py` by adding the following line to `urlpatterns`:
 ```
 path('', include(('chiffee.urls', 'chiffee'), namespace='chiffee')),
 ```
