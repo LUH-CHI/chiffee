@@ -25,7 +25,10 @@ This will create a `mysite` directory in your current directory.
 
 Make sure to create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) inside `mysite`, this will 
 allow you to avoid any conflicts with existing system packages. We'll call the folder containing virtual environment 
-`venv`.
+`venv`:
+```
+virtualenv venv
+```
 
 ## Cloning files from GitHub and installing required packages
 
@@ -34,8 +37,8 @@ Go into the newly created `mysite` directory and clone this repository:
 git clone https://github.com/LUH-CHI/chiffee.git
 ```
 
-Now activate your virtual environment, navigate to the cloned folder `chiffee` and install all packages listed 
-[here](requirements.txt) by using the following command:
+Now activate your virtual environment with `source venv/bin/activate`, navigate to the cloned folder `chiffee` and 
+install all packages listed [here](requirements.txt) by using the following command:
 ```
 pip install -r requirements.txt
 ```
