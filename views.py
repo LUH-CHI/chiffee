@@ -12,178 +12,183 @@ from .models import CATEGORIES, Employee, Product, Purchase
 EMAIL_ADDRESS = 'kaffeekasse@chi.uni-hannover.de'
 EMAIL_SUBJECT = 'Kauf Kaffeekasse'
 
-QUANTITY_RANGE = range(1, 6)
+QUANTITY_RANGE = [1, 2, 3, 4, 5, 6]
 
 
 def index(request):
-    if request.method == 'GET':
-        products = Product.objects.order_by('category', 'name')
-        active_products = []
+    while True:
+        if request.method != 'GET':
+            break
 
-        for product in products:
-            if product.active:
-                active_products.append(product)
+        products = Product.objects.filter(
+            active=True).order_by('category', 'name')
 
-        context = {'categories': CATEGORIES,
-                   'active_products': active_products}
+        context = {'categories': CATEGORIES, 'products': products}
 
         return render(request, 'chiffee/index.html', context)
 
     return render(request, 'chiffee/redirect.html')
 
 
-def make_purchases(request, quantity=1):
+def make_purchase(request, quantity=1):
     while True:
-        if request.method == 'POST' and 'product-name' in request.POST:
-            products = Product.objects.filter(name=request.POST['product-name'])
+        if Group.objects.filter(name="professors").exists():
+            groups = Group.objects.get(name="professors")
+            professors = groups.user_set.all().filter(
+                is_active=True).order_by('username')
+        else:
+            professors = Group.objects.none()
 
-            if products.exists():
-                product = products[0]
+        if Group.objects.filter(name="employees").exists():
+            groups = Group.objects.get(name="employees")
+            employees = groups.user_set.all().filter(
+                is_active=True).order_by('username')
+        else:
+            employees = Group.objects.none()
 
-                if 'quantity' in request.POST:
-                    try:
-                        new_quantity = int(request.POST['quantity'])
-                    except ValueError:
-                        break
+        if Group.objects.filter(name="students").exists():
+            groups = Group.objects.get(name="students")
+            students = groups.user_set.all().filter(
+                is_active=True).order_by('username')
+        else:
+            students = Group.objects.none()
 
-                    if new_quantity not in QUANTITY_RANGE:
-                        break
+        users = list(chain(professors, employees, students))
 
-                    quantity = new_quantity
+        if request.method == 'GET':
+            if 'product' not in request.GET:
+                break
 
-                if Group.objects.filter(name="professors").exists():
-                    groups = Group.objects.get(name="professors")
-                    professors = groups.user_set.all()
-                    professors = professors.filter(
-                        is_active=True).order_by('username')
-                else:
-                    professors = Group.objects.none()
+            products = Product.objects.filter(name=request.GET['product'])
 
-                if Group.objects.filter(name="employees").exists():
-                    groups = Group.objects.get(name="employees")
-                    employees = groups.user_set.all()
-                    employees = employees.filter(
-                        is_active=True).order_by('username')
-                else:
-                    employees = Group.objects.none()
+            if not products.exists():
+                break
 
-                if Group.objects.filter(name="students").exists():
-                    groups = Group.objects.get(name="students")
-                    students = groups.user_set.all()
-                    students = students.filter(
-                        is_active=True).order_by('username')
-                else:
-                    students = Group.objects.none()
+            product = products[0]
 
-                users = list(chain(professors, employees, students))
-                context = {'product': product,
-                           'quantity': quantity,
-                           'quantity_range': QUANTITY_RANGE,
-                           'total_price': quantity * product.price,
-                           'users': users}
-
-                return render(request, 'chiffee/make_purchase.html', context)
-
-        break
-
-    return render(request, 'chiffee/redirect.html')
-
-
-def confirm_purchases(request):
-    while True:
-        if (request.method == 'POST'
-                and 'confirm' in request.POST
-                and 'name' in request.POST
-                and 'quantity' in request.POST):
-            products = Product.objects.filter(name=request.POST['name'])
-
-            if products.exists():
-                product = products[0]
-
+            if 'quantity' in request.GET:
                 try:
-                    quantity = int(request.POST['quantity'])
+                    quantity = int(request.GET['quantity'])
                 except ValueError:
                     break
 
                 if quantity not in QUANTITY_RANGE:
                     break
 
-                user = None
+            context = {'product': product,
+                       'quantity': quantity,
+                       'quantity_range': QUANTITY_RANGE,
+                       'total_price': quantity * product.price,
+                       'users': users}
 
-                if request.user.is_authenticated:
-                    user = request.user
-                else:
-                    users = User.objects.filter(
-                        username=request.POST['confirm'])
+            return render(request, 'chiffee/make_purchase.html', context)
+        elif request.method == 'POST':
+            if 'product' not in request.POST or 'quantity' not in request.POST:
+                break
 
-                    if users.exists():
-                        user = users[0]
+            products = Product.objects.filter(name=request.POST['product'])
 
-                if user is not None:
-                    try:
-                        employee = user.employee
-                    except Employee.DoesNotExist:
-                        employee = Employee.objects.create(user=user)
+            if not products.exists():
+                break
 
-                    total_price = product.price * quantity
-                    employee.balance -= total_price
-                    employee.save()
+            product = products[0]
 
-                    new_purchase = Purchase.objects.create(
-                        user=user,
-                        product=product,
-                        quantity=quantity,
-                        total_price=total_price)
-                    url = request.get_raw_uri().replace(
-                        request.get_full_path(), '')
-                    url += reverse('chiffee:cancel-purchases',
-                                   kwargs={'key': new_purchase.key})
+            try:
+                quantity = int(request.POST['quantity'])
+            except ValueError:
+                break
 
-                    if employee.get_all_emails:
-                        message = ('Hallo {} {}.\n\n'
-                                   'Sie haben {} {} '
-                                   'für insgesamt €{:.2f} gekauft.\n\n'
-                                   'Dein Guthaben ist jetzt €{:.2f}.\n\n'
-                                   'Wenn Sie diesen Kauf nicht getätigt haben, '
-                                   'klicken Sie hier: {}')
-                        message = message.format(user.first_name,
-                                                 user.last_name,
-                                                 quantity,
-                                                 product.name,
-                                                 total_price,
-                                                 employee.balance,
-                                                 url)
+            if quantity not in QUANTITY_RANGE:
+                break
 
-                        send_mail(EMAIL_SUBJECT,
-                                  message,
-                                  EMAIL_ADDRESS,
-                                  [user.email],
-                                  fail_silently=False)
+            if request.user.is_authenticated:
+                user = request.user
+            else:
+                users = User.objects.filter(username=request.POST['username'])
 
-                    context = {'done': True}
+                if not users.exists():
+                    break
 
-                    return render(request, 'chiffee/redirect.html', context)
+                user = users[0]
 
-        break
+            try:
+                employee = user.employee
+            except Employee.DoesNotExist:
+                employee = Employee.objects.create(user=user)
+
+            total_price = product.price * quantity
+            employee.balance -= total_price
+            employee.save()
+
+            new_purchase = Purchase.objects.create(user=user,
+                                                   product=product,
+                                                   quantity=quantity,
+                                                   total_price=total_price)
+
+            url = request.get_raw_uri().replace(request.get_full_path(), '')
+            url += reverse('chiffee:cancel-purchase',
+                           kwargs={'key': new_purchase.key})
+
+            if employee.get_all_emails:
+                message = (f'Hallo {user.first_name} {user.last_name}!\n\n'
+                           f'Sie haben {quantity} {product.name} '
+                           f'für insgesamt €{total_price:.2f} gekauft.\n\n'
+                           f'Ihr aktueller Kontostand beträgt '
+                           f'€{employee.balance:.2f}.\n\n'
+                           f'Wenn Sie diesen Kauf stornieren möchten, '
+                           f'klicken Sie bitte hier: {url}')
+
+                send_mail(EMAIL_SUBJECT,
+                          message,
+                          EMAIL_ADDRESS,
+                          [user.email],
+                          fail_silently=False)
+
+            context = {'done': True}
+
+            return render(request, 'chiffee/redirect.html', context)
+        else:
+            break
 
     return render(request, 'chiffee/redirect.html')
 
 
-def cancel_purchases(request, key):
+def cancel_purchase(request, key):
     context = {}
 
-    if request.method == 'GET':
+    while True:
+        if request.method != 'GET':
+            break
+
         purchases = Purchase.objects.filter(key=key)
 
-        if purchases.exists():
-            purchase = purchases[0]
+        if not purchases.exists():
+            break
 
-            employee = purchase.user.employee
-            employee.balance += purchase.total_price
-            employee.save()
+        purchase = purchases[0]
 
-            purchase.delete()
-            context['done'] = True
+        employee = purchase.user.employee
+        employee.balance += purchase.total_price
+        employee.save()
+
+        if employee.get_all_emails:
+            message = (f'Hallo {purchase.user.first_name} '
+                       f'{purchase.user.last_name}!\n\n'
+                       f'Sie haben Ihren Kauf von {purchase.quantity} '
+                       f'{purchase.product.name} für insgesamt '
+                       f'€{purchase.total_price:.2f} erfolgreich storniert.\n\n'
+                       f'Ihr aktueller Kontostand beträgt '
+                       f'€{employee.balance:.2f}.\n\n')
+
+            send_mail(EMAIL_SUBJECT,
+                      message,
+                      EMAIL_ADDRESS,
+                      [purchase.user.email],
+                      fail_silently=False)
+
+        purchase.delete()
+        context['done'] = True
+        break
 
     return render(request, 'chiffee/redirect.html', context)
 
@@ -191,6 +196,7 @@ def cancel_purchases(request, key):
 @login_required
 def view_my_purchases(request):
     if request.method == 'GET':
+
         purchases = Purchase.objects.filter(user=request.user)
         employees = Employee.objects.filter(user=request.user)
 
@@ -208,149 +214,14 @@ def view_my_purchases(request):
 
 @login_required
 @user_passes_test(lambda user: user.is_superuser)
-def view_accounts(request, edit_username=None):
-    context = {'users': User.objects.order_by('last_name', 'first_name')}
-
-    if request.method == 'GET':
-        return render(request, 'chiffee/accounts.html', context)
-    elif request.method == 'POST':
-        if edit_username is not None:
-            context['edit_username'] = edit_username
-
-        return render(request, 'chiffee/accounts.html', context)
-
-    return render(request, 'chiffee/redirect.html')
-
-
-@login_required
-@user_passes_test(lambda user: user.is_superuser)
-def edit_accounts(request):
-    while True:
-        if request.method == 'POST' and 'edit' in request.POST:
-            users = User.objects.filter(username=request.POST['edit'])
-
-            if users.exists():
-                return view_accounts(request, users[0].username)
-        elif (request.method == 'POST'
-              and 'confirm' in request.POST
-              and 'balance' in request.POST):
-            users = User.objects.filter(username=request.POST['confirm'])
-
-            if users.exists():
-                user = users[0]
-                user.employee.balance = request.POST['balance']
-
-                try:
-                    user.employee.save()
-                except ValueError:
-                    break
-
-                return redirect('chiffee:view-accounts')
-
-        break
-
-    return render(request, 'chiffee/redirect.html')
-
-
-@login_required
-@user_passes_test(lambda user: user.is_superuser)
-def view_products(request, edit_name=None):
-    active_products = Product.objects.filter(
-        active=True).order_by('category', 'name')
-    inactive_products = Product.objects.filter(active=False)
-
-    context = {'categories': CATEGORIES,
-               'active_products': active_products,
-               'inactive_products': inactive_products}
-
-    if request.method == 'GET':
-        return render(request, 'chiffee/products.html', context)
-    elif request.method == 'POST':
-        if edit_name is not None:
-            context['edit_name'] = edit_name
-
-        return render(request, 'chiffee/products.html', context)
-
-    return render(request, 'chiffee/redirect.html')
-
-
-@login_required
-@user_passes_test(lambda user: user.is_superuser)
-def edit_products(request):
-    while True:
-        if request.method == 'POST' and 'edit' in request.POST:
-            products = Product.objects.filter(name=request.POST['name'])
-
-            if products.exists():
-                return view_products(request, products[0].name)
-        elif (request.method == 'POST'
-              and 'confirm' in request.POST
-              and 'name' in request.POST
-              and 'price' in request.POST
-              and 'category' in request.POST):
-            products = Product.objects.filter(name=request.POST['confirm'])
-
-            if products.exists():
-                product = products[0]
-                product.name = request.POST['name']
-
-                try:
-                    product.save()
-                except ValueError:
-                    break
-
-                product.price = request.POST['price']
-
-                try:
-                    product.save()
-                except ValueError:
-                    break
-
-                for category in CATEGORIES:
-                    if request.POST['category'] == category[1]:
-                        product.category = category[0]
-                        break
-
-                if 'active' in request.POST and request.POST['active'] == 'on':
-                    product.active = True
-                else:
-                    product.active = False
-
-                product.save()
-
-                return redirect('chiffee:view-products')
-
-        break
-
-    return render(request, 'chiffee/redirect.html')
-
-
-@login_required
-@user_passes_test(lambda user: user.is_superuser)
-def restore_products(request):
-    if request.method == 'POST' and 'restore' in request.POST:
-        products = Product.objects.filter(name=request.POST['name'])
-
-        if products.exists():
-            product = products[0]
-            product.active = True
-            product.save()
-
-            return redirect('chiffee:view-products')
-
-    return render(request, 'chiffee/redirect.html')
-
-
-@login_required
-@user_passes_test(lambda user: user.is_superuser)
 def view_all_purchases(request):
     if request.method == 'GET':
         purchase_filter = PurchaseFilter(request.GET)
-        products = Product.objects.all()
+        all_products = Product.objects.all()
         purchases = {}
         total_counter = 0
 
-        for product in products:
+        for product in all_products:
             counter = 0
 
             for purchase in purchase_filter.qs:
@@ -365,5 +236,109 @@ def view_all_purchases(request):
                    'total_counter': total_counter}
 
         return render(request, 'chiffee/all_purchases.html', context)
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def accounts(request):
+    while True:
+        context = {'users': User.objects.order_by('last_name', 'first_name')}
+
+        if request.method == 'GET':
+            if 'username' in request.GET:
+                context['username'] = request.GET['username']
+
+            return render(request, 'chiffee/accounts.html', context)
+        elif request.method == 'POST':
+            if 'username' not in request.POST or 'balance' not in request.POST:
+                break
+
+            users = User.objects.filter(username=request.POST['username'])
+
+            if not users.exists():
+                break
+
+            user = users[0]
+            employees = Employee.objects.filter(user=user)
+
+            if not employees.exists():
+                user.employee = Employee.objects.create(user=user)
+
+            user.employee.balance = request.POST['balance']
+
+            try:
+                user.employee.save()
+            except ValueError:
+                break
+
+            return render(request, 'chiffee/accounts.html', context)
+        else:
+            break
+
+    return render(request, 'chiffee/redirect.html')
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def products(request):
+    while True:
+        active_products = Product.objects.filter(
+            active=True).order_by('category', 'name')
+        inactive_products = Product.objects.filter(active=False)
+
+        context = {'categories': CATEGORIES,
+                   'active_products': active_products,
+                   'inactive_products': inactive_products}
+
+        if request.method == 'GET':
+            if 'product' in request.GET:
+                context['product'] = request.GET['product']
+
+            return render(request, 'chiffee/products.html', context)
+        elif request.method == 'POST':
+            if all(param in request.POST
+                   for param in ['product', 'price', 'category']):
+
+                edit_products = Product.objects.filter(
+                    name=request.POST['product'])
+
+                if not edit_products.exists():
+                    break
+
+                product = edit_products[0]
+                product.price = request.POST['price']
+
+                for category in CATEGORIES:
+                    if request.POST['category'] == category[1]:
+                        product.category = category[0]
+                        break
+
+                if 'active' in request.POST and request.POST['active'] == 'on':
+                    product.active = True
+                else:
+                    product.active = False
+
+                try:
+                    product.save()
+                except ValueError:
+                    break
+            elif 'product' in request.POST:
+                edit_products = Product.objects.filter(
+                    name=request.POST['product'])
+
+                if not edit_products.exists():
+                    break
+
+                product = edit_products[0]
+
+                if not product.active:
+                    product.active = True
+                    product.save()
+
+            return render(request, 'chiffee/products.html', context)
+        else:
+            break
 
     return render(request, 'chiffee/redirect.html')

@@ -14,45 +14,53 @@
 
                 <tbody>
                     {% for user in users %}
-                        <tr>
-                            <td class="col-8">{{ user.last_name }} {{ user.first_name }}</td>
+                        {% if user.is_active %}
+                            <tr>
+                                <td class="col-8">{{ user.last_name }} {{ user.first_name }}</td>
 
-                            {% if edit_username and edit_username == user.username %}
-                                <form action="{% url 'chiffee:edit-accounts' %}" method="post">
-                                    {% csrf_token %}
+                                {% if username and username == user.username %}
+                                    <form action="{% url 'chiffee:accounts' %}" method="post">
+                                        {% csrf_token %}
 
+                                        <td class="col-2">
+                                            <input class="form-control input-sm"
+                                                   name="balance"
+                                                   type="text"
+                                                   value="{% if user.employee %}{{ user.employee.balance|floatformat:-2 }}{% else %}0{% endif %}">
+                                        </td>
+                                        <td class="col-2">
+                                            <button class="btn btn-block btn-primary"
+                                                    name="username"
+                                                    type="submit"
+                                                    value="{{ user.username }}">
+                                                Bestätigen
+                                            </button>
+                                        </td>
+                                    </form>
+                                {% else %}
                                     <td class="col-2">
-                                        <input class="form-control input-sm"
-                                               name="balance"
-                                               type="text"
-                                               value="{{ user.employee.balance|floatformat:-2 }}">
+                                        {% if user.employee %}
+                                            €{{ user.employee.balance|floatformat:-2 }}
+                                        {% else %}
+                                            €0
+                                        {% endif %}
                                     </td>
-                                    <td class="col-2">
-                                        <button class="btn btn-block btn-primary"
-                                                name="confirm"
-                                                type="submit"
-                                                value="{{ user.username }}">
-                                            Bestätigen
-                                        </button>
-                                    </td>
-                                </form>
-                            {% else %}
-                                <td class="col-2">€{{ user.employee.balance|floatformat:-2 }}</td>
 
-                                <form action="{% url 'chiffee:edit-accounts' %}" method="post">
-                                    {% csrf_token %}
+                                    <form action="{% url 'chiffee:accounts' %}" method="get">
+                                        {% csrf_token %}
 
-                                    <td class="col-2">
-                                        <button class="btn btn-block btn-primary"
-                                                name="edit"
-                                                type="submit"
-                                                value="{{ user.username }}">
-                                            Bearbeiten
-                                        </button>
-                                    </td>
-                                </form>
-                            {% endif %}
-                        </tr>
+                                        <td class="col-2">
+                                            <button class="btn btn-block btn-primary"
+                                                    name="username"
+                                                    type="submit"
+                                                    value="{{ user.username }}">
+                                                Bearbeiten
+                                            </button>
+                                        </td>
+                                    </form>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

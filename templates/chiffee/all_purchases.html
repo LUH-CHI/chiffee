@@ -49,7 +49,7 @@
                             <td>{{ purchase.user.last_name }} {{ purchase.user.first_name }}</td>
                             <td>{{ purchase.product.name }}</td>
                             <td>{{ purchase.quantity }}</td>
-                            <td>{{ purchase.total_price }}</td>
+                            <td>{{ purchase.total_price|floatformat:-2 }}</td>
                             <td>{{ purchase.date }}</td>
                         </tr>
                     {% endfor %}
