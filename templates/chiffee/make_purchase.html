@@ -9,10 +9,7 @@
         <p>Wie viele willst du kaufen?</p>
 
         {% for i in quantity_range %}
-            <button class="btn btn-outline-info btn-lg
-                        {% if i == quantity %}
-                            active
-                        {% endif %}"
+            <button class="btn btn-outline-info btn-lg {% if i == quantity %} active {% endif %}"
                     type="submit"
                     name="edit"
                     value="{{ i }}">
@@ -41,13 +38,10 @@
                 <div class="col-3">
                     {% if u|has_group:'professors' or u|has_group:'employees' or u|has_group:'students' %}
                         <button class="btn btn-block btn-lg btn-menu
-                                    {% if u|has_group:'professors' %}
-                                        btn-primary
-                                    {% elif u|has_group:'employees' %}
-                                        btn-success
-                                    {% elif u|has_group:'students' %}
-                                        btn-danger
-                                    {% endif %}"
+                                       {% if u|has_group:'professors' %} btn-primary
+                                       {% elif u|has_group:'employees' %} btn-success
+                                       {% elif u|has_group:'students' %} btn-danger
+                                       {% endif %}"
                                 name="confirm"
                                 type="submit"
                                 value="{{ u.username }}">
@@ -62,11 +56,7 @@
                 {% endif %}
             {% endfor %}
         {% else %}
-            <button class="btn btn-lg btn-primary"
-                    name="confirm"
-                    type="submit">
-                Bestätigen
-            </button>
+            <button class="btn btn-lg btn-primary" name="confirm" type="submit">Bestätigen</button>
         {% endif %}
 
         <input name="name" type="hidden" value="{{ product.name }}">

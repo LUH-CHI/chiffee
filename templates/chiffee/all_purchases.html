@@ -44,15 +44,15 @@
                 </thead>
 
                 <tbody>
-                {% for purchase in filter.qs %}
-                    <tr>
-                        <td>{{ purchase.user.last_name }} {{ purchase.user.first_name }}</td>
-                        <td>{{ purchase.product.name }}</td>
-                        <td>{{ purchase.quantity }}</td>
-                        <td>{{ purchase.total_price }}</td>
-                        <td>{{ purchase.date }}</td>
-                    </tr>
-                {% endfor %}
+                    {% for purchase in filter.qs %}
+                        <tr>
+                            <td>{{ purchase.user.last_name }} {{ purchase.user.first_name }}</td>
+                            <td>{{ purchase.product.name }}</td>
+                            <td>{{ purchase.quantity }}</td>
+                            <td>{{ purchase.total_price }}</td>
+                            <td>{{ purchase.date }}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

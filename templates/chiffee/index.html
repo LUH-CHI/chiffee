@@ -10,29 +10,21 @@
             {% endif %}
 
             <div class="col-3">
-                {% if product.category == categories.0.0 or product.category == categories.1.0 or product.category == categories.2.0 %}
-                    <button class="btn btn-block btn-lg btn-menu
-                                {% if product.category == categories.0.0 %}
-                                    btn-primary
-                                {% elif product.category == categories.1.0 %}
-                                    btn-success
-                                {% elif product.category == categories.2.0 %}
-                                    btn-danger
-                                {% endif %}"
-                            name="product-name"
-                            type="submit"
-                            value="{{ product.name }}">
-                        {{ product.name }} (€{{ product.price|floatformat:-2 }})
-                    </button>
-                {% endif %}
+                <button class="btn btn-block btn-lg btn-menu
+                               {% if product.category == categories.0.0 %} btn-primary
+                               {% elif product.category == categories.1.0 %} btn-success
+                               {% elif product.category == categories.2.0 %} btn-danger
+                               {% endif %}"
+                        name="product-name"
+                        type="submit"
+                        value="{{ product.name }}">
+                    {{ product.name }} (€{{ product.price|floatformat:-2 }})
+                </button>
             </div>
 
-            {% if forloop.counter0|add:1|divisibleby:4 or forloop.last %}
+            {% if forloop.counter|divisibleby:4 or forloop.last %}
                 </div>
-
-                {% if not forloop.last %}
-                    <br>
-                {% endif %}
+                <br>
             {% endif %}
         {% endfor %}
     </form>

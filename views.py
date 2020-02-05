@@ -53,19 +53,25 @@ def make_purchases(request, quantity=1):
 
                 if Group.objects.filter(name="professors").exists():
                     groups = Group.objects.get(name="professors")
-                    professors = groups.user_set.all().order_by('username')
+                    professors = groups.user_set.all()
+                    professors = professors.filter(
+                        is_active=True).order_by('username')
                 else:
                     professors = Group.objects.none()
 
                 if Group.objects.filter(name="employees").exists():
                     groups = Group.objects.get(name="employees")
-                    employees = groups.user_set.all().order_by('username')
+                    employees = groups.user_set.all()
+                    employees = employees.filter(
+                        is_active=True).order_by('username')
                 else:
                     employees = Group.objects.none()
 
                 if Group.objects.filter(name="students").exists():
                     groups = Group.objects.get(name="students")
-                    students = groups.user_set.all().order_by('username')
+                    students = groups.user_set.all()
+                    students = students.filter(
+                        is_active=True).order_by('username')
                 else:
                     students = Group.objects.none()
 
