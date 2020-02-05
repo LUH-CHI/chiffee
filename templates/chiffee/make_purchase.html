@@ -48,9 +48,11 @@
                     </button>
                 </div>
 
-                {% if forloop.counter|divisibleby:4 and not forloop.first %}
+                {% if forloop.counter|divisibleby:4 and not forloop.first and not forloop.last %}
                     </div>
                     <br>
+                {% elif forloop.last %}
+        <br>
                 {% endif %}
             {% endfor %}
         {% else %}
