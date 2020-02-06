@@ -278,6 +278,7 @@ You can use LDAP to authenticate your users. Skip this section if you're not pla
 Add the following lines to `mysite/settings.py` and fill out the blanks:
 ```
 import ldap
+
 from django_auth_ldap.config import GroupOfUniqueNamesType, LDAPSearch
 
 # LDAP authentication
