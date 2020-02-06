@@ -34,6 +34,6 @@ This project is licensed under the MIT license. For details see [LICENSE](LICENS
 - Fixed some UI issues in templates.
 - Reworked views.
 
-#### 2.0 `February 3, 2020`
+### 2.0 `February 3, 2020`
 
 To migrate from an older version on the existing server, follow [these](./INSTALL.md#migrating) steps.
