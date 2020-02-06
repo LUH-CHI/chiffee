@@ -3,7 +3,7 @@ from itertools import chain
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core.mail import send_mail
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse
 
 from chiffee.filters import PurchaseFilter
@@ -20,10 +20,10 @@ def index(request):
         if request.method != 'GET':
             break
 
-        products = Product.objects.filter(
+        all_products = Product.objects.filter(
             active=True).order_by('category', 'name')
 
-        context = {'categories': CATEGORIES, 'products': products}
+        context = {'categories': CATEGORIES, 'products': all_products}
 
         return render(request, 'chiffee/index.html', context)
 
@@ -59,12 +59,12 @@ def make_purchase(request, quantity=1):
             if 'product' not in request.GET:
                 break
 
-            products = Product.objects.filter(name=request.GET['product'])
+            all_products = Product.objects.filter(name=request.GET['product'])
 
-            if not products.exists():
+            if not all_products.exists():
                 break
 
-            product = products[0]
+            product = all_products[0]
 
             if 'quantity' in request.GET:
                 try:
@@ -86,12 +86,12 @@ def make_purchase(request, quantity=1):
             if 'product' not in request.POST or 'quantity' not in request.POST:
                 break
 
-            products = Product.objects.filter(name=request.POST['product'])
+            all_products = Product.objects.filter(name=request.POST['product'])
 
-            if not products.exists():
+            if not all_products.exists():
                 break
 
-            product = products[0]
+            product = all_products[0]
 
             try:
                 quantity = int(request.POST['quantity'])
