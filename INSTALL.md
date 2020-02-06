@@ -281,41 +281,44 @@ import ldap
 
 from django_auth_ldap.config import GroupOfUniqueNamesType, LDAPSearch
 
-# LDAP authentication
-AUTH_LDAP_SERVER_URI = "" # Required.
-PORT = 389
-AUTH_LDAP_START_TLS = True # Make sure the certificate exists. "False" for testing only.
-AUTH_LDAP_BIND_DN = "" # Optional.
-AUTH_LDAP_BIND_PASSWORD = "" # Required when "AUTH_LDAP_BIND_DN" is used.
-BASE_DN = 'dc=example,dc=com' # Modify user search.
+AUTH_LDAP_SERVER_URI = 'ldap://my.ldap.com' # Required.
+PORT = 389 # Change the port if it's not the standard one.
+AUTH_LDAP_START_TLS = True # Make sure the certificate exists. 'False' is for testing only.
+
+AUTH_LDAP_BIND_DN = '' # The distinguished name to use when binding to the LDAP server. Optional.
+AUTH_LDAP_BIND_PASSWORD = '' # Required when 'AUTH_LDAP_BIND_DN' is used.
+
+BASE_DN = 'dc=my,dc=ldap,dc=com' # Modify for user and group search.
+
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    BASE_DN
+    BASE_DN,
     ldap.SCOPE_SUBTREE,
     '(uid=%(user)s)',
 )
 
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-    'ou=group,dc=example,dc=com', # Modify group search.
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch( # Modify 'ou'.
+    'ou=,' + BASE_DN,
     ldap.SCOPE_SUBTREE,
     '(objectClass=groupOfUniqueNames)',
 )
 
-# Modify mapping from LDAP entry to Django users.
-# If user already exists, all values specified here will overwrite the existing ones.
+# Modify mappings from LDAP to Django users.
+# If the user already exists, these values will overwrite the existing ones.
 AUTH_LDAP_USER_ATTR_MAP = {
-    "username": "uid",
-    "first_name": "",
-    "last_name": "",
-    "email": "",
+    'username': 'uid',
+    'first_name': '',
+    'last_name': '',
+    'email': '',
 }
 
+# Modify group permissions.
 AUTH_LDAP_GROUP_TYPE = GroupOfUniqueNamesType(name_attr='cn')
 AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-    "is_superuser": "cn=,ou=,dc=example,dc=com", # Modify permission by group.
+    'is_superuser': 'cn=,ou=,' + BASE_DN,
 }
 
-# Remove "ModelBackend" for LDAP authentication only.
-# Remove "LDAPBackend" for Django authentication only.
+# Remove 'ModelBackend' for LDAP authentication only.
+# Remove 'LDAPBackend' for Django authentication only.
 # Order of entries is important if user exists in both backends.
 # First entry is queried first, and LDAP overwrites existing user values!
 AUTHENTICATION_BACKENDS = [
@@ -333,7 +336,7 @@ Some customizations may be necessary in `mysite/chiffee/management/commands/sync
 Either execute the command manually or use a cronjob to sync, e.g. every day at 11.59 pm.
 ```
 crontab -e
-59 23 * * * cd /home/user/chiffee/mysite && python3 manage.py syncldap
+59 23 * * * cd /home/user/mysite/ && venv/bin/python3 manage.py syncldap
 ```
 
 # Running
