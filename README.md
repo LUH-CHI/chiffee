@@ -28,6 +28,12 @@ This project is licensed under the MIT license. For details see [LICENSE](LICENS
 
 ## Versions
 
+### 2.1 `February 6, 2020`
+- Fixed a bug where inactive users appeared on the purchase page.
+- Users will now get confirmation emails when they cancel a purchase.
+- Fixed some UI issues in templates.
+- Reworked views.
+
 #### 2.0 `February 3, 2020`
 
 To migrate from an older version on the existing server, follow [these](./INSTALL.md#migrating) steps.
