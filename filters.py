@@ -1,15 +1,20 @@
 import django_filters
+from django import forms
+from django.contrib.auth.models import User
 
-from chiffee.models import Buy
+from chiffee.models import Product, Purchase
 
 
-class BuyFilter(django_filters.FilterSet):
-    buy_date = django_filters.DateRangeFilter(label='Date of purchase:',
-                                              field_name='buy_date')
-    buy_date_range = django_filters.DateFromToRangeFilter(
-        label='Date of purchase (range):',
-        field_name='buy_date')
+class PurchaseFilter(django_filters.FilterSet):
+    user = django_filters.ModelChoiceFilter(
+        queryset=User.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}))
+    product = django_filters.ModelChoiceFilter(
+        queryset=Product.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}))
+    date = django_filters.DateRangeFilter(
+        widget=forms.Select(attrs={'class': 'form-control'}))
 
     class Meta:
-        model = Buy
-        fields = ['buy_user', 'buy_product', 'buy_date', 'buy_date_range']
+        model = Purchase
+        fields = ['user', 'product', 'date']

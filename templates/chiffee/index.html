@@ -1,0 +1,29 @@
+{% extends "chiffee/base.html" %}
+
+{% block body %}
+    <form action="{% url 'chiffee:make-purchase' %}" method="get">
+        {% for product in products %}
+            {% if forloop.counter0|divisibleby:4 %}
+                <div class="row">
+            {% endif %}
+
+            <div class="col-3">
+                <button class="btn btn-block btn-lg btn-menu
+                               {% if product.category == categories.0.0 %} btn-primary
+                               {% elif product.category == categories.1.0 %} btn-success
+                               {% elif product.category == categories.2.0 %} btn-danger
+                               {% endif %}"
+                        type="submit"
+                        name="product"
+                        value="{{ product.name }}">
+                    {{ product.name }} (€{{ product.price|floatformat:-2 }})
+                </button>
+            </div>
+
+            {% if forloop.counter|divisibleby:4 or forloop.last %}
+                </div>
+                <br>
+            {% endif %}
+        {% endfor %}
+    </form>
+{% endblock %}

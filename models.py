@@ -1,47 +1,92 @@
-from django.db import models
+import secrets
+
+from django.contrib.auth.models import User
+from django.db import OperationalError, models
 
 # Create your models here.
-from django.contrib.auth.models import User
 
-CATEGORIES = (
-		('D', 'Trinken'),
-		('F', 'Snacks'),
-		('I', 'Eis'),
-	)
+CATEGORIES = ((1, 'Trinken'), (2, 'Snacks'), (3, 'Eis'))
+
+
+def generate_key():
+    while True:
+        key = secrets.token_hex(32)
+        try:
+            if not Purchase.objects.filter(key=key).exists():
+                break
+        except OperationalError:
+            break
+
+    return key
+
 
 class Product(models.Model):
-	product_name = models.CharField(max_length=200)
-	product_price = models.FloatField()
-	product_categorie = models.CharField(max_length=1, choices=CATEGORIES, default="D")
-	product_active = models.BooleanField(default=True)
+    class Meta:
+        ordering = ['name']
 
-	def __str__(self):              # __unicode__ on Python 2
-		return (str(self.product_name) + " (" + str(self.product_price) + ")")
+    name = models.CharField(max_length=200)
+    price = models.FloatField()
+    category = models.IntegerField(choices=CATEGORIES)
+    active = models.BooleanField(default=True)
 
-class Buy(models.Model):
-	buy_date = models.DateTimeField(auto_now_add=True)
-	buy_count = models.IntegerField()
-	buy_product = models.ForeignKey(Product, on_delete=models.PROTECT) # it is not possible to delete a 'Product'
-	buy_user = models.ForeignKey(User, default=None, on_delete=models.CASCADE) # if the user is deleted, delete this 'Buy' too.
-	buy_total = models.FloatField(default=0.0)
-	buy_address = models.CharField(max_length=20, default="keine")
+    def __str__(self):
+        return self.name
 
-	def __str__(self):              # __unicode__ on Python 2
-		return (str(self.buy_user) + " bought " + str(self.buy_count) + " "  + str(self.buy_product))
+
+class Purchase(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    user = models.ForeignKey(User, default=None, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    quantity = models.IntegerField()
+    total_price = models.FloatField()
+    date = models.DateTimeField(auto_now_add=True)
+    key = models.CharField(max_length=64, default=generate_key)
+
+    def __str__(self):
+        day = self.date.day
+        month = self.date.month
+        year = self.date.year
+        hour = self.date.hour
+        minute = self.date.minute
+        second = self.date.second
+
+        return '{} bought {} {} for €{:.2f} on {}.{}.{} at {}:{}:{}'.format(
+            self.user,
+            self.quantity,
+            self.product.name,
+            self.quantity * self.product.price,
+            day,
+            month,
+            year,
+            hour,
+            minute,
+            second
+        )
+
 
 class Deposit(models.Model):
-	deposit_date = models.DateTimeField(auto_now_add=True)
-	deposit_value = models.FloatField(default=0.0)
-	deposit_user = models.ForeignKey(User, default=None, on_delete=models.CASCADE)
+    class Meta:
+        ordering = ['-date']
 
-	def __str__(self):              # __unicode__ on Python 2
-		return (str(self.deposit_user) + " (" + str(self.deposit_value) + ")")
+    user = models.ForeignKey(User, default=None, on_delete=models.CASCADE)
+    amount = models.FloatField(default=0.0)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '{} deposited €{:.2f} on {}'.format(self.user,
+                                                   self.amount,
+                                                   self.date.isoformat())
 
 
 class Employee(models.Model):
-	user = models.OneToOneField(User, on_delete=models.CASCADE)
-	balance = models.FloatField(default=0.0)
-	allMails = models.BooleanField(default=True)
+    class Meta:
+        ordering = ['user']
 
-	def __str__(self):              # __unicode__ on Python 2
-		return (str(self.user) + " (" + str(self.balance) + ")")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    balance = models.FloatField(default=0.0)
+    get_all_emails = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.user
